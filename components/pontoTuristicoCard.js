@@ -1,73 +1,51 @@
-import React from 'react'
-import { View, Text, StyleSheet } from 'react-native';
+// components/PontoTuristicoCard.js
+import React from 'react';
+import { View, Text, StyleSheet, Image } from 'react-native';
 
-const PontoTuristicoCard = (props) => {
-
+const PontoTuristicoCard = ({ nome, descricao, imagem }) => {
     return (
-
-        <View style={styles.card}>
-
-            <Text style={styles.titulo}>{props.nome}</Text> {/* <--- Acessando props.nome */}
-
-            <Text style={styles.descricao}>{props.descricao}</Text> {/* <--- Acessando props.descricao */}
-
+        <View style={styles.cardContainer}>
+            <Image source={{ uri: imagem }} style={styles.cardImage} />
+            <View style={styles.cardTextContainer}>
+                <Text style={styles.cardTitle}>{nome}</Text>
+                <Text style={styles.cardDescription}>{descricao}</Text>
+            </View>
         </View>
-
     );
-
 };
 
 const styles = StyleSheet.create({
-
-    card: {
-
+    cardContainer: {
         backgroundColor: '#fff',
-
-        padding: 15,
-
-        marginVertical: 10,
-
-        marginHorizontal: 20,
-
         borderRadius: 8,
-
-        shadowColor: '#000',
-
+        overflow: 'hidden',
+        marginBottom: 16,
+        marginHorizontal: 16,
+        elevation: 3, // Sombra para Android
+        shadowColor: '#000', // Sombra para iOS
         shadowOffset: { width: 0, height: 2 },
-
         shadowOpacity: 0.1,
-
-        shadowRadius: 3.84,
-
-        elevation: 5, // Sombra para Android
-
+        shadowRadius: 2,
+        flexDirection: 'row',
     },
-
-    titulo: {
-
-        fontSize: 20,
-
+    cardImage: {
+        width: 100,
+        height: 100,
+    },
+    cardTextContainer: {
+        flex: 1,
+        padding: 12,
+    },
+    cardTitle: {
+        fontSize: 16,
         fontWeight: 'bold',
-
-        marginBottom: 5,
-
         color: '#333',
-
+        marginBottom: 4,
     },
-
-    descricao: {
-
+    cardDescription: {
         fontSize: 14,
-
         color: '#666',
-
     },
-
 });
 
-
-
-export default PontoTuristicoCard; // <--- Exporte o componente
-
-
-//ARROW FUncTIONS: =>, são funções anonimas e ajudam a escrver as funcionaliddse dos componenets 
+export default PontoTuristicoCard;
