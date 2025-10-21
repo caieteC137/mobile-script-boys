@@ -3,14 +3,14 @@ import React from 'react';
 import { StyleSheet, View } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 
-// Importa o componente de tela que busca os dados da API
-import ListaPontosTuristicos from './screens/ListaPontosTuristicos';
+// Importa o componente de tela de login
+import LoginScreen from './screens/LoginScreen';
 
 export default function App() {
   return (
     <View style={styles.container}>
-      {/* Renderiza o componente que faz o carregamento e exibe a lista */}
-      <ListaPontosTuristicos />
+      {/* Renderiza a tela de login */}
+      <LoginScreen />
       <StatusBar style="auto" />
     </View>
   );
@@ -19,6 +19,6 @@ export default function App() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: '#F5F0E8',
   },
 });
