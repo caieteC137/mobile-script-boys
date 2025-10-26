@@ -10,7 +10,6 @@ import {
   TouchableOpacity,
   KeyboardAvoidingView,
   Platform,
-  Image,
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import InputField from '../components/InputField';
@@ -106,10 +105,8 @@ const LoginScreen = () => {
           <View style={styles.loginCard}>
             {/* Logo Area */}
             <View style={styles.logoContainer}>
-            <View style={styles.logoPlaceholder}>
-              <Image
-                source={require('../assets/logo-museu.png')}
-                style={styles.logoImage}/>
+              <View style={styles.logoPlaceholder}>
+                <Text style={styles.logoText}>🏛️</Text>
               </View>
               <Text style={styles.welcomeTitle}>Welcome to Museum</Text>
               <Text style={styles.welcomeSubtitle}>Sign in to continue</Text>
@@ -212,11 +209,8 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 3,
   },
-  logoImage: {
-    width: 130,
-    height: 130,
-    resizeMode: 'contain',
-    borderRadius: 35, // optional, keeps rounded shape inside placeholder
+  logoText: {
+    fontSize: 40,
   },
   welcomeTitle: {
     fontSize: 24,
