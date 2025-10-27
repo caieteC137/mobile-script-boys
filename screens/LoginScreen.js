@@ -4,19 +4,18 @@ import {
   View,
   Text,
   StyleSheet,
-  SafeAreaView,
   ScrollView,
   Alert,
   TouchableOpacity,
   KeyboardAvoidingView,
   Platform,
+  Image,
 } from 'react-native';
-import { StatusBar } from 'expo-status-bar';
 import InputField from '../components/InputField';
 import ButtonPrimary from '../components/ButtonPrimary';
 import { validateCredentials } from '../services/authStorage';
 
-const LoginScreen = () => {
+const LoginScreen = ({ onLogin }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -60,10 +59,12 @@ const LoginScreen = () => {
         Alert.alert(
           'Success',
           result.message,
-          [{ text: 'OK', style: 'default' }]
+          [{ 
+            text: 'OK', 
+            style: 'default',
+            onPress: () => onLogin()
+          }]
         );
-        // Here you would typically navigate to the main app
-        console.log('Login successful - would navigate to main app');
       } else {
         Alert.alert(
           'Login Failed',
@@ -91,8 +92,7 @@ const LoginScreen = () => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar style="dark" backgroundColor="#F5F0E8" />
+    <View style={styles.container}>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.keyboardAvoidingView}
@@ -101,12 +101,17 @@ const LoginScreen = () => {
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
+          bounces={true}
         >
           <View style={styles.loginCard}>
             {/* Logo Area */}
             <View style={styles.logoContainer}>
               <View style={styles.logoPlaceholder}>
-                <Text style={styles.logoText}>🏛️</Text>
+                <Image 
+                  source={require('../assets/logo-museu.png')} 
+                  style={styles.logoImage}
+                  resizeMode="contain"
+                />
               </View>
               <Text style={styles.welcomeTitle}>Welcome to Museum</Text>
               <Text style={styles.welcomeSubtitle}>Sign in to continue</Text>
@@ -159,7 +164,7 @@ const LoginScreen = () => {
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
-    </SafeAreaView>
+    </View>
   );
 };
 
@@ -209,8 +214,9 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 3,
   },
-  logoText: {
-    fontSize: 40,
+  logoImage: {
+    width: 160,
+    height: 160,
   },
   welcomeTitle: {
     fontSize: 24,
