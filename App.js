@@ -1,17 +1,29 @@
 // App.js
-import React from 'react';
-import { StyleSheet, View } from 'react-native';
+import React, { useState } from 'react';
+import { View, StyleSheet } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
-
-// Importa o componente de tela de login
 import LoginScreen from './screens/LoginScreen';
+import HomeScreen from './screens/HomeScreen';
 
 export default function App() {
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  const handleLogin = () => {
+    setIsLoggedIn(true);
+  };
+
+  const handleLogout = () => {
+    setIsLoggedIn(false);
+  };
+
   return (
     <View style={styles.container}>
-      {/* Renderiza a tela de login */}
-      <LoginScreen />
-      <StatusBar style="auto" />
+      <StatusBar style="dark" />
+      {isLoggedIn ? (
+        <HomeScreen onLogout={handleLogout} />
+      ) : (
+        <LoginScreen onLogin={handleLogin} />
+      )}
     </View>
   );
 }
