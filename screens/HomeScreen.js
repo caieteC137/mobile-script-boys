@@ -1,5 +1,5 @@
 // screens/HomeScreen.js
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -9,50 +9,38 @@ import {
   FlatList,
   Dimensions,
   Image,
+  ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import MuseumCard from '../components/MuseumCard';
+import { fetchNearbyMuseums, adaptPlacesToMuseums } from '../services/googlePlaces';
 
 const { width: screenWidth } = Dimensions.get('window');
 
 const HomeScreen = ({ onLogout }) => {
   const [activeTab, setActiveTab] = useState('home');
+  const [museums, setMuseums] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  // Sample museum data
-  const museums = [
-    {
-      id: '1',
-      title: 'National Art Gallery',
-      subtitle: 'Contemporary & Classic',
-      description: 'Explore world-class collections spanning centuries of artistic expression and cultural heritage.',
-      rating: 4.8,
-      distance: '1.2 km',
-    },
-    {
-      id: '2',
-      title: 'History Museum',
-      subtitle: 'Ancient Civilizations',
-      description: 'Discover artifacts and exhibits showcasing the rich history of our region and beyond.',
-      rating: 4.6,
-      distance: '3.1 km',
-    },
-    {
-      id: '3',
-      title: 'Science Center',
-      subtitle: 'Interactive Learning',
-      description: 'Hands-on exhibits and interactive displays perfect for curious minds of all ages.',
-      rating: 4.7,
-      distance: '2.8 km',
-    },
-    {
-      id: '4',
-      title: 'Cultural Heritage',
-      subtitle: 'Local Traditions',
-      description: 'Celebrate local culture through traditional arts, crafts, and historical artifacts.',
-      rating: 4.5,
-      distance: '4.2 km',
-    },
-  ];
+  useEffect(() => {
+    const fetchMuseums = async () => {
+      try {
+        // Coordenadas padrão (ex.: São Paulo) enquanto não há geolocalização ativa
+        const latitude = -23.55052;
+        const longitude = -46.633308;
+        const json = await fetchNearbyMuseums({ latitude, longitude, radius: 4000 });
+        const adapted = adaptPlacesToMuseums(json.results).slice(0, 12);
+        setMuseums(adapted);
+      } catch (e) {
+        setError('Não foi possível carregar os museus (Google Places).');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchMuseums();
+  }, []);
 
   const handleMuseumPress = (museum) => {
     // Navigate to museum details screen
@@ -66,6 +54,7 @@ const HomeScreen = ({ onLogout }) => {
       description={item.description}
       rating={item.rating}
       distance={item.distance}
+      image={item.image}
       onPress={() => handleMuseumPress(item)}
     />
   );
@@ -169,14 +158,25 @@ const HomeScreen = ({ onLogout }) => {
             </TouchableOpacity>
           </View>
           
-          <FlatList
-            data={museums}
-            renderItem={renderMuseumCard}
-            keyExtractor={(item) => item.id}
-            horizontal={true}
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.carouselContainer}
-          />
+          {isLoading ? (
+            <View style={{ paddingVertical: 24, alignItems: 'center' }}>
+              <ActivityIndicator size="small" color="#8B6F47" />
+              <Text style={{ marginTop: 8, color: '#666' }}>Carregando museus...</Text>
+            </View>
+          ) : error ? (
+            <View style={{ paddingVertical: 24, alignItems: 'center' }}>
+              <Text style={{ color: '#A8402E' }}>{error}</Text>
+            </View>
+          ) : (
+            <FlatList
+              data={museums}
+              renderItem={renderMuseumCard}
+              keyExtractor={(item) => item.id}
+              horizontal={true}
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.carouselContainer}
+            />
+          )}
         </View>
 
         {/* Categories */}
