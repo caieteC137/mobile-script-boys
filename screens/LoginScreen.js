@@ -28,18 +28,18 @@ const LoginScreen = ({ onLogin }) => {
     setPasswordError('');
 
     if (!email.trim()) {
-      setEmailError('Email is required');
+      setEmailError('E-mail é obrigatório');
       isValid = false;
     } else if (!/\S+@\S+\.\S+/.test(email)) {
-      setEmailError('Please enter a valid email');
+      setEmailError('Insira um e-mail válido');
       isValid = false;
     }
 
     if (!password.trim()) {
-      setPasswordError('Password is required');
+      setPasswordError('Senha é obrigatória');
       isValid = false;
     } else if (password.length < 6) {
-      setPasswordError('Password must be at least 6 characters');
+      setPasswordError('A senha deve ter pelo menos 6 caracteres');
       isValid = false;
     }
 
@@ -57,7 +57,7 @@ const LoginScreen = ({ onLogin }) => {
       
       if (result.success) {
         Alert.alert(
-          'Success',
+          'Sucesso',
           result.message,
           [{ 
             text: 'OK', 
@@ -67,15 +67,15 @@ const LoginScreen = ({ onLogin }) => {
         );
       } else {
         Alert.alert(
-          'Login Failed',
+          'Falha no login',
           result.message,
           [{ text: 'OK', style: 'default' }]
         );
       }
     } catch (error) {
       Alert.alert(
-        'Error',
-        'An unexpected error occurred. Please try again.',
+        'Erro',
+        'Ocorreu um erro inesperado. Tente novamente.',
         [{ text: 'OK', style: 'default' }]
       );
     } finally {
@@ -85,8 +85,8 @@ const LoginScreen = ({ onLogin }) => {
 
   const handleRegister = () => {
     Alert.alert(
-      'Register',
-      'Registration feature will be implemented soon!',
+      'Cadastro',
+      'Funcionalidade de cadastro será implementada em breve!',
       [{ text: 'OK', style: 'default' }]
     );
   };
@@ -113,15 +113,15 @@ const LoginScreen = ({ onLogin }) => {
                   resizeMode="contain"
                 />
               </View>
-              <Text style={styles.welcomeTitle}>Welcome to Museum</Text>
-              <Text style={styles.welcomeSubtitle}>Sign in to continue</Text>
+              <Text style={styles.welcomeTitle}>Bem-vindo ao Museu</Text>
+              <Text style={styles.welcomeSubtitle}>Faça login para continuar</Text>
             </View>
 
             {/* Form Fields */}
             <View style={styles.formContainer}>
               <InputField
-                label="Email"
-                placeholder="Enter your email"
+                label="E-mail"
+                placeholder="Digite seu e-mail"
                 value={email}
                 onChangeText={setEmail}
                 keyboardType="email-address"
@@ -129,8 +129,8 @@ const LoginScreen = ({ onLogin }) => {
               />
 
               <InputField
-                label="Password"
-                placeholder="Enter your password"
+                label="Senha"
+                placeholder="Digite sua senha"
                 value={password}
                 onChangeText={setPassword}
                 secureTextEntry={true}
@@ -138,7 +138,7 @@ const LoginScreen = ({ onLogin }) => {
               />
 
               <ButtonPrimary
-                title="Login"
+                title="Entrar"
                 onPress={handleLogin}
                 loading={loading}
                 disabled={loading}
@@ -148,18 +148,18 @@ const LoginScreen = ({ onLogin }) => {
             {/* Register Link */}
             <View style={styles.registerContainer}>
               <Text style={styles.registerText}>
-                New here?{' '}
+                Novo por aqui?{' '}
                 <TouchableOpacity onPress={handleRegister}>
-                  <Text style={styles.registerLink}>Register!</Text>
+                  <Text style={styles.registerLink}>Cadastre-se!</Text>
                 </TouchableOpacity>
               </Text>
             </View>
 
             {/* Demo Credentials Info */}
             <View style={styles.demoInfoContainer}>
-              <Text style={styles.demoInfoTitle}>Demo Credentials:</Text>
-              <Text style={styles.demoInfoText}>Email: admin@museum.com</Text>
-              <Text style={styles.demoInfoText}>Password: museum123</Text>
+              <Text style={styles.demoInfoTitle}>Credenciais de demonstração:</Text>
+              <Text style={styles.demoInfoText}>E-mail: admin@museum.com</Text>
+              <Text style={styles.demoInfoText}>Senha: museum123</Text>
             </View>
           </View>
         </ScrollView>
