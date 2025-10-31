@@ -15,7 +15,7 @@ const MuseumCard = ({
     <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.8}>
       <View style={styles.imageContainer}>
         <Image 
-          source={image || { uri: 'https://via.placeholder.com/200x120/8B6F47/FFFFFF?text=Museum' }} 
+          source={image || { uri: 'https://via.placeholder.com/200x120/8B6F47/FFFFFF?text=Museu' }} 
           style={styles.image}
           resizeMode="cover"
         />
@@ -32,7 +32,7 @@ const MuseumCard = ({
         <View style={styles.footer}>
           <Text style={styles.distance}>{distance}</Text>
           <View style={styles.categoryTag}>
-            <Text style={styles.categoryText}>Museum</Text>
+            <Text style={styles.categoryText}>Museu</Text>
           </View>
         </View>
       </View>
