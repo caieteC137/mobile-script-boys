@@ -71,7 +71,7 @@ const HomeScreen = ({ onLogout }) => {
           color={activeTab === 'home' ? '#FFFFFF' : '#8B6F47'} 
         />
         <Text style={[styles.tabText, activeTab === 'home' && styles.activeTabText]}>
-          Home
+          Início
         </Text>
       </TouchableOpacity>
 
@@ -85,7 +85,7 @@ const HomeScreen = ({ onLogout }) => {
           color={activeTab === 'explore' ? '#FFFFFF' : '#8B6F47'} 
         />
         <Text style={[styles.tabText, activeTab === 'explore' && styles.activeTabText]}>
-          Explore
+          Explorar
         </Text>
       </TouchableOpacity>
 
@@ -99,7 +99,7 @@ const HomeScreen = ({ onLogout }) => {
           color={activeTab === 'favorites' ? '#FFFFFF' : '#8B6F47'} 
         />
         <Text style={[styles.tabText, activeTab === 'favorites' && styles.activeTabText]}>
-          Favorites
+          Favoritos
         </Text>
       </TouchableOpacity>
 
@@ -113,7 +113,7 @@ const HomeScreen = ({ onLogout }) => {
           color={activeTab === 'profile' ? '#FFFFFF' : '#8B6F47'} 
         />
         <Text style={[styles.tabText, activeTab === 'profile' && styles.activeTabText]}>
-          Profile
+          Perfil
         </Text>
       </TouchableOpacity>
     </View>
@@ -145,16 +145,16 @@ const HomeScreen = ({ onLogout }) => {
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false} bounces={true}>
         {/* Welcome Section */}
         <View style={styles.welcomeSection}>
-          <Text style={styles.welcomeTitle}>Welcome back!</Text>
-          <Text style={styles.welcomeSubtitle}>Discover amazing museums near you</Text>
+          <Text style={styles.welcomeTitle}>Bem-vindo de volta!</Text>
+          <Text style={styles.welcomeSubtitle}>Descubra museus incríveis perto de você</Text>
         </View>
 
         {/* Featured Museums */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Featured Museums</Text>
+            <Text style={styles.sectionTitle}>Museus em destaque</Text>
             <TouchableOpacity>
-              <Text style={styles.seeAllText}>See All</Text>
+              <Text style={styles.seeAllText}>Ver todos</Text>
             </TouchableOpacity>
           </View>
           
@@ -181,49 +181,49 @@ const HomeScreen = ({ onLogout }) => {
 
         {/* Categories */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Categories</Text>
+          <Text style={styles.sectionTitle}>Categorias</Text>
           <View style={styles.categoriesGrid}>
             <TouchableOpacity style={styles.categoryItem}>
               <View style={[styles.categoryIcon, { backgroundColor: '#C17E3A' }]}>
                 <Ionicons name="library" size={24} color="#FFFFFF" />
               </View>
-              <Text style={styles.categoryText}>Art</Text>
+              <Text style={styles.categoryText}>Arte</Text>
             </TouchableOpacity>
             
             <TouchableOpacity style={styles.categoryItem}>
               <View style={[styles.categoryIcon, { backgroundColor: '#4A7C59' }]}>
                 <Ionicons name="time" size={24} color="#FFFFFF" />
               </View>
-              <Text style={styles.categoryText}>History</Text>
+              <Text style={styles.categoryText}>História</Text>
             </TouchableOpacity>
             
             <TouchableOpacity style={styles.categoryItem}>
               <View style={[styles.categoryIcon, { backgroundColor: '#A8402E' }]}>
                 <Ionicons name="flask" size={24} color="#FFFFFF" />
               </View>
-              <Text style={styles.categoryText}>Science</Text>
+              <Text style={styles.categoryText}>Ciência</Text>
             </TouchableOpacity>
             
             <TouchableOpacity style={styles.categoryItem}>
               <View style={[styles.categoryIcon, { backgroundColor: '#8B6F47' }]}>
                 <Ionicons name="people" size={24} color="#FFFFFF" />
               </View>
-              <Text style={styles.categoryText}>Culture</Text>
+              <Text style={styles.categoryText}>Cultura</Text>
             </TouchableOpacity>
           </View>
         </View>
 
         {/* Recent Visits */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Recent Visits</Text>
+          <Text style={styles.sectionTitle}>Visitas recentes</Text>
           <View style={styles.recentVisitsContainer}>
             <View style={styles.recentVisitItem}>
               <View style={styles.recentVisitIcon}>
                 <Ionicons name="checkmark-circle" size={20} color="#4A7C59" />
               </View>
               <View style={styles.recentVisitContent}>
-                <Text style={styles.recentVisitTitle}>National Art Gallery</Text>
-                <Text style={styles.recentVisitDate}>Visited 2 days ago</Text>
+                <Text style={styles.recentVisitTitle}>Galeria Nacional de Arte</Text>
+                <Text style={styles.recentVisitDate}>Visitado há 2 dias</Text>
               </View>
             </View>
             
@@ -232,8 +232,8 @@ const HomeScreen = ({ onLogout }) => {
                 <Ionicons name="checkmark-circle" size={20} color="#4A7C59" />
               </View>
               <View style={styles.recentVisitContent}>
-                <Text style={styles.recentVisitTitle}>Science Center</Text>
-                <Text style={styles.recentVisitDate}>Visited 1 week ago</Text>
+                <Text style={styles.recentVisitTitle}>Centro de Ciência</Text>
+                <Text style={styles.recentVisitDate}>Visitado há 1 semana</Text>
               </View>
             </View>
           </View>
