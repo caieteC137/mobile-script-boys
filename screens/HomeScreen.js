@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import MuseumCard from '../components/MuseumCard';
+import FavoritesScreen from './FavoritesScreen';
 import { fetchNearbyMuseums, adaptPlacesToMuseums } from '../services/googlePlaces';
 
 const { width: screenWidth } = Dimensions.get('window');
@@ -142,6 +143,11 @@ const HomeScreen = ({ onLogout }) => {
       </View>
 
       {/* Main Content */}
+      {activeTab === 'favorites' ? (
+        <View style={styles.content}>
+          <FavoritesScreen />
+        </View>
+      ) : (
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false} bounces={true}>
         {/* Welcome Section */}
         <View style={styles.welcomeSection}>
@@ -239,6 +245,7 @@ const HomeScreen = ({ onLogout }) => {
           </View>
         </View>
       </ScrollView>
+      )}
 
       {/* Bottom Tab Bar */}
       {renderTabBar()}
