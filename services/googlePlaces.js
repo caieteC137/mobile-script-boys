@@ -41,19 +41,18 @@ export function adaptPlacesToMuseums(results = []) {
   return results.map((place) => {
     const photoRef = place.photos?.[0]?.photo_reference;
     return {
-      ...place, // Mantém todos os dados originais
       id: place.place_id,
       title: place.name,
-      subtitle: place.vicinity || place.formatted_address || 'Museu',
-      description: place.types?.slice(0, 3).join(', ') || 'Museu',
+      subtitle: place.vicinity || place.formatted_address || 'Museum',
+      description: place.types?.slice(0, 3).join(', ') || 'Museum',
       rating: place.rating || 4.5,
       user_ratings_total: place.user_ratings_total || 0,
-      distance: place.user_ratings_total ? `${place.user_ratings_total} avaliações` : '',
+      distance: place.user_ratings_total ? `${place.user_ratings_total} reviews` : '',
       image: photoRef ? { uri: getPlacePhotoUrl(photoRef, 600) } : undefined,
       photos: place.photos,
       types: place.types || ['museum'],
       opening_hours: place.opening_hours || { open_now: false },
-      formatted_address: place.formatted_address || place.vicinity || 'Endereço não disponível',
+      formatted_address: place.formatted_address || place.vicinity || 'Address not available',
     };
   });
 }

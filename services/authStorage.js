@@ -13,7 +13,7 @@ export const validateCredentials = (email, password) => {
       const isValid = email === mockCredentials.email && password === mockCredentials.password;
       resolve({
         success: isValid,
-        message: isValid ? 'Login realizado com sucesso!' : 'E-mail ou senha inválidos'
+        message: isValid ? 'Login successful!' : 'Invalid email or password'
       });
     }, 1000);
   });
