@@ -1,9 +1,14 @@
 // App.js
 import React, { useState } from 'react';
-import { View, StyleSheet } from 'react-native';
+import { StyleSheet } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
+import { NavigationContainer } from '@react-navigation/native';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import LoginScreen from './screens/LoginScreen';
 import HomeScreen from './screens/HomeScreen';
+import MuseumDetailsScreen from './screens/MuseumDetailsScreen';
+
+const Stack = createNativeStackNavigator();
 
 export default function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -17,14 +22,39 @@ export default function App() {
   };
 
   return (
-    <View style={styles.container}>
+    <NavigationContainer>
       <StatusBar style="dark" />
-      {isLoggedIn ? (
-        <HomeScreen onLogout={handleLogout} />
-      ) : (
-        <LoginScreen onLogin={handleLogin} />
-      )}
-    </View>
+      <Stack.Navigator>
+        {!isLoggedIn ? (
+          <Stack.Screen 
+            name="Login" 
+            component={LoginScreen}
+            initialParams={{ onLogin: handleLogin }}
+            options={{ headerShown: false }}
+          />
+        ) : (
+          <>
+            <Stack.Screen 
+              name="Home" 
+              component={HomeScreen}
+              initialParams={{ onLogout: handleLogout }}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen 
+              name="MuseumDetails" 
+              component={MuseumDetailsScreen}
+              options={({ route }) => ({
+                title: route.params?.museum?.name || 'Detalhes do Museu',
+                headerStyle: {
+                  backgroundColor: '#F5F0E8',
+                },
+                headerTintColor: '#333',
+              })}
+            />
+          </>
+        )}
+      </Stack.Navigator>
+    </NavigationContainer>
   );
 }
 

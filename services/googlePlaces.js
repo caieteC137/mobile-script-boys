@@ -46,8 +46,13 @@ export function adaptPlacesToMuseums(results = []) {
       subtitle: place.vicinity || place.formatted_address || 'Museu',
       description: place.types?.slice(0, 3).join(', ') || 'Museu',
       rating: place.rating || 4.5,
-      distance: place.user_ratings_total ? `${place.user_ratings_total} avaliações` : '',
+      user_ratings_total: place.user_ratings_total || 0,
+      distance: place.user_ratings_total ? `${place.user_ratings_total} reviews` : '',
       image: photoRef ? { uri: getPlacePhotoUrl(photoRef, 600) } : undefined,
+      photos: place.photos,
+      types: place.types || ['museum'],
+      opening_hours: place.opening_hours || { open_now: false },
+      formatted_address: place.formatted_address || place.vicinity || 'Address not available',
     };
   });
 }

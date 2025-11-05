@@ -18,7 +18,7 @@ import { fetchNearbyMuseums, adaptPlacesToMuseums } from '../services/googlePlac
 
 const { width: screenWidth } = Dimensions.get('window');
 
-const HomeScreen = ({ onLogout }) => {
+const HomeScreen = ({ onLogout, navigation }) => {
   const [activeTab, setActiveTab] = useState('home');
   const [museums, setMuseums] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -44,8 +44,25 @@ const HomeScreen = ({ onLogout }) => {
   }, []);
 
   const handleMuseumPress = (museum) => {
-    // Navigate to museum details screen
-    console.log('Navigate to museum:', museum.title);
+    console.log('Museum data:', museum); // Para debug
+    navigation.navigate('MuseumDetails', { 
+      museum: {
+        ...museum, // Preserva todos os dados originais
+        name: museum.name || museum.title,
+        formatted_address: museum.formatted_address || museum.subtitle,
+        rating: museum.rating || 0,
+        user_ratings_total: museum.user_ratings_total || 0,
+        types: museum.types || ['museum'],
+        opening_hours: {
+          open_now: museum.opening_hours?.open_now || false
+        },
+        description: museum.description,
+        image: museum.image,
+        rating: museum.rating,
+        latitude: museum.latitude,
+        longitude: museum.longitude,
+      } 
+    });
   };
 
   const renderMuseumCard = ({ item }) => (

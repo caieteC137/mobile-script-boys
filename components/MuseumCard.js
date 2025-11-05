@@ -5,17 +5,19 @@ import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 const MuseumCard = ({ 
   title, 
   subtitle, 
-  description, 
   image, 
   onPress,
   rating = 4.5,
-  distance = "2.3 km"
+  openNow = false
 }) => {
   return (
-    <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.8}>
+    <TouchableOpacity 
+      style={styles.card} 
+      onPress={onPress}
+      activeOpacity={0.8}>
       <View style={styles.imageContainer}>
         <Image 
-          source={image || { uri: 'https://via.placeholder.com/200x120/8B6F47/FFFFFF?text=Museu' }} 
+          source={image || { uri: 'https://via.placeholder.com/400x240/8B6F47/FFFFFF?text=Museu' }} 
           style={styles.image}
           resizeMode="cover"
         />
@@ -23,18 +25,10 @@ const MuseumCard = ({
           <Text style={styles.ratingText}>⭐ {rating}</Text>
         </View>
       </View>
-      
-      <View style={styles.contentContainer}>
+      <View style={styles.infoContainer}>
         <Text style={styles.title} numberOfLines={1}>{title}</Text>
         <Text style={styles.subtitle} numberOfLines={1}>{subtitle}</Text>
-        <Text style={styles.description} numberOfLines={2}>{description}</Text>
-        
-        <View style={styles.footer}>
-          <Text style={styles.distance}>{distance}</Text>
-          <View style={styles.categoryTag}>
-            <Text style={styles.categoryText}>Museu</Text>
-          </View>
-        </View>
+        <Text style={styles.statusText}>{openNow ? 'Aberto agora' : 'Fechado'}</Text>
       </View>
     </TouchableOpacity>
   );
@@ -42,86 +36,73 @@ const MuseumCard = ({
 
 const styles = StyleSheet.create({
   card: {
-    width: 280,
+    width: 360,
+    height: 240,
     backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    marginRight: 16,
+    borderRadius: 18,
+    marginRight: 20,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 5,
+    shadowOpacity: 0.12,
+    shadowRadius: 12,
+    elevation: 7,
     overflow: 'hidden',
   },
   imageContainer: {
     position: 'relative',
-    height: 120,
+    width: '100%',
+    height: '100%',
+    flex: 1,
+    justifyContent: 'flex-end',
   },
   image: {
     width: '100%',
     height: '100%',
+    position: 'absolute',
+    top: 0,
+    left: 0,
   },
   ratingContainer: {
     position: 'absolute',
-    top: 8,
-    right: 8,
+    top: 12,
+    right: 12,
     backgroundColor: 'rgba(0, 0, 0, 0.7)',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 14,
+    zIndex: 2,
   },
   ratingText: {
     color: '#FFFFFF',
-    fontSize: 12,
+    fontSize: 14,
     fontWeight: '600',
   },
-  contentContainer: {
+  infoContainer: {
     padding: 16,
+    backgroundColor: '#fff',
+    borderBottomLeftRadius: 18,
+    borderBottomRightRadius: 18,
   },
   title: {
-    fontSize: 18,
+    fontSize: 22,
     fontWeight: '700',
     color: '#8B6F47',
-    marginBottom: 4,
+    marginBottom: 2,
     fontFamily: 'PlayfairDisplay-Bold',
   },
   subtitle: {
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: '500',
-    color: '#C17E3A',
-    marginBottom: 8,
+    color: '#111',
+    marginBottom: 6,
     fontFamily: 'Montserrat-Medium',
   },
-  description: {
-    fontSize: 14,
-    fontWeight: '400',
-    color: '#666',
-    lineHeight: 20,
-    marginBottom: 12,
-    fontFamily: 'Montserrat-Regular',
-  },
-  footer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  distance: {
-    fontSize: 12,
-    fontWeight: '500',
-    color: '#4A7C59',
-    fontFamily: 'Montserrat-Medium',
-  },
-  categoryTag: {
-    backgroundColor: '#F5F0E8',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
-  },
-  categoryText: {
-    fontSize: 12,
+  statusText: {
+    fontSize: 15,
+    color: '#111',
     fontWeight: '600',
-    color: '#8B6F47',
     fontFamily: 'Montserrat-SemiBold',
+    marginTop: 2,
   },
 });
 

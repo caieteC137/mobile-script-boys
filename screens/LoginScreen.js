@@ -15,7 +15,8 @@ import InputField from '../components/InputField';
 import ButtonPrimary from '../components/ButtonPrimary';
 import { validateCredentials } from '../services/authStorage';
 
-const LoginScreen = ({ onLogin }) => {
+const LoginScreen = ({ route }) => {
+  const { onLogin } = route.params;
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
