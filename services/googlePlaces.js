@@ -43,8 +43,8 @@ export function adaptPlacesToMuseums(results = []) {
     return {
       id: place.place_id,
       title: place.name,
-      subtitle: place.vicinity || place.formatted_address || 'Museum',
-      description: place.types?.slice(0, 3).join(', ') || 'Museum',
+      subtitle: place.vicinity || place.formatted_address || 'Museu',
+      description: place.types?.slice(0, 3).join(', ') || 'Museu',
       rating: place.rating || 4.5,
       user_ratings_total: place.user_ratings_total || 0,
       distance: place.user_ratings_total ? `${place.user_ratings_total} reviews` : '',
