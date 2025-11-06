@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, Image, ScrollView, Linking, ActivityIndicator } from 'react-native';
-import { MaterialIcons } from '@expo/vector-icons';
+import { View, Text, StyleSheet, Image, ScrollView, Linking, ActivityIndicator, TouchableOpacity } from 'react-native';
+import { MaterialIcons, Ionicons } from '@expo/vector-icons';
 import { fonts } from '../utils/fonts';
 
-const MuseumDetailsScreen = ({ route }) => {
+const MuseumDetailsScreen = ({ route, navigation }) => {
   const { museum } = route.params;
   const [wiki, setWiki] = useState(null);
   const [loadingWiki, setLoadingWiki] = useState(false);
@@ -46,85 +46,102 @@ const MuseumDetailsScreen = ({ route }) => {
     fetchWiki();
   }, [museum.name, museum.title]);
 
-  return (
-    <ScrollView style={styles.container}>
-      {museum.photos && museum.photos[0] && (
-        <Image 
-          source={{ uri: getPhotoUrl(museum.photos[0].photo_reference) }}
-          style={styles.image}
-          resizeMode="cover"
-        />
-      )}
-      
-      <View style={styles.content}>
-        <Text style={styles.title}>{museum.name || museum.title}</Text>
 
-        {/* Rating and Reviews */}
-        {(museum.rating || museum.user_ratings_total) && (
-          <View style={styles.ratingContainer}>
-            <MaterialIcons name="star" size={24} color="#FFD700" />
-            <Text style={styles.ratingText}>{museum.rating || 0}</Text>
-            <Text style={styles.reviewCount}>
-              ({museum.user_ratings_total || 0} avaliações)
-            </Text>
-          </View>
+  return (
+    <View style={styles.container}>
+      {/* Back Button */}
+      <TouchableOpacity 
+        style={styles.backButton}
+        onPress={() => navigation.goBack()}
+      >
+        <Ionicons name="arrow-back" size={24} color="#8B6F47" />
+      </TouchableOpacity>
+
+      {/* Main Content */}
+      <ScrollView 
+        style={styles.scrollView}
+        showsVerticalScrollIndicator={false}
+        bounces={true}
+        contentContainerStyle={styles.scrollContent}
+      >
+        {museum.photos && museum.photos[0] && (
+          <Image 
+            source={{ uri: getPhotoUrl(museum.photos[0].photo_reference) }}
+            style={styles.image}
+            resizeMode="cover"
+          />
         )}
         
-        {/* Address */}
-        {museum.formatted_address && (
-          <View style={styles.infoContainer}>
-            <MaterialIcons name="place" size={24} color="#8B6F47" />
-            <Text style={styles.address}>{museum.formatted_address}</Text>
-          </View>
-        )}
+        <View style={styles.content}>
+          <Text style={styles.title}>{museum.name || museum.title}</Text>
 
-        {/* Opening Status */}
-        {museum.opening_hours && (
-          <View style={styles.infoContainer}>
-            <MaterialIcons name="access-time" size={24} color="#8B6F47" />
-            <Text style={styles.info}>
-              {museum.opening_hours.open_now ? 'Aberto agora' : 'Fechado'}
-            </Text>
-            <View style={[
-              styles.statusIndicator, 
-              { backgroundColor: museum.opening_hours.open_now ? '#4CAF50' : '#F44336' }
-            ]} />
-          </View>
-        )}
-
-        {/* Types */}
-        {museum.types && museum.types.length > 0 && (
-          <View style={styles.typesContainer}>
-            {museum.types.map((type, index) => (
-              type !== 'point_of_interest' && type !== 'establishment' && (
-                <View key={index} style={styles.typeTag}>
-                  <Text style={styles.typeText}>
-                    {type === 'tourist_attraction' ? 'Atração Turística' : 
-                     type === 'museum' ? 'Museu' : type}
-                  </Text>
-                </View>
-              )
-            ))}
-          </View>
-        )}
-
-        {/* Wikipedia Description */}
-        <View style={{ marginTop: 24 }}>
-          {loadingWiki && (
-            <ActivityIndicator size="small" color="#8B6F47" />
-          )}
-          {wiki && wiki.extract && (
-            <View style={styles.wikiContainer}>
-              <Text style={styles.descriptionTitle}>Sobre o Museu (Wikipedia)</Text>
-              <Text style={styles.description}>{wiki.extract.replace(/(<([^>]+)>)/gi, '')}</Text>
-              <Text style={styles.wikiLink} onPress={() => Linking.openURL(wiki.url)}>
-                Ver mais na Wikipedia
+          {/* Rating and Reviews */}
+          {(museum.rating || museum.user_ratings_total) && (
+            <View style={styles.ratingContainer}>
+              <MaterialIcons name="star" size={24} color="#FFD700" />
+              <Text style={styles.ratingText}>{museum.rating || 0}</Text>
+              <Text style={styles.reviewCount}>
+                ({museum.user_ratings_total || 0} avaliações)
               </Text>
             </View>
           )}
+          
+          {/* Address */}
+          {museum.formatted_address && (
+            <View style={styles.infoContainer}>
+              <MaterialIcons name="place" size={24} color="#8B6F47" />
+              <Text style={styles.address}>{museum.formatted_address}</Text>
+            </View>
+          )}
+
+          {/* Opening Status */}
+          {museum.opening_hours && (
+            <View style={styles.infoContainer}>
+              <MaterialIcons name="access-time" size={24} color="#8B6F47" />
+              <Text style={styles.info}>
+                {museum.opening_hours.open_now ? 'Aberto agora' : 'Fechado'}
+              </Text>
+              <View style={[
+                styles.statusIndicator, 
+                { backgroundColor: museum.opening_hours.open_now ? '#4CAF50' : '#F44336' }
+              ]} />
+            </View>
+          )}
+
+          {/* Types */}
+          {museum.types && museum.types.length > 0 && (
+            <View style={styles.typesContainer}>
+              {museum.types.map((type, index) => (
+                type !== 'point_of_interest' && type !== 'establishment' && (
+                  <View key={index} style={styles.typeTag}>
+                    <Text style={styles.typeText}>
+                      {type === 'tourist_attraction' ? 'Atração Turística' : 
+                       type === 'museum' ? 'Museu' : type}
+                    </Text>
+                  </View>
+                )
+              ))}
+            </View>
+          )}
+
+          {/* Wikipedia Description */}
+          <View style={{ marginTop: 24 }}>
+            {loadingWiki && (
+              <ActivityIndicator size="small" color="#8B6F47" />
+            )}
+            {wiki && wiki.extract && (
+              <View style={styles.wikiContainer}>
+                <Text style={styles.descriptionTitle}>Sobre o Museu (Wikipedia)</Text>
+                <Text style={styles.description}>{wiki.extract.replace(/(<([^>]+)>)/gi, '')}</Text>
+                <Text style={styles.wikiLink} onPress={() => Linking.openURL(wiki.url)}>
+                  Ver mais na Wikipedia
+                </Text>
+              </View>
+            )}
+          </View>
         </View>
-      </View>
-    </ScrollView>
+      </ScrollView>
+    </View>
   );
 };
 
@@ -132,6 +149,29 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#F5F0E8',
+  },
+  backButton: {
+    position: 'absolute',
+    top: 20,
+    left: 20,
+    zIndex: 10,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#FFFFFF',
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    paddingTop: 20,
   },
   image: {
     width: '100%',
@@ -148,6 +188,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 8,
     elevation: 8,
+    paddingBottom: 100,
   },
   title: {
     fontSize: 28,
@@ -228,13 +269,25 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 16,
   },
+  descriptionTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#8B6F47',
+    marginBottom: 12,
+    fontFamily: fonts.playfairSemiBold,
+  },
+  description: {
+    fontSize: 15,
+    lineHeight: 24,
+    color: '#666',
+    fontFamily: fonts.montserratRegular,
+  },
   wikiLink: {
     color: '#007AFF',
     fontSize: 15,
     marginTop: 8,
     fontFamily: fonts.montserratSemiBold,
   },
-  // Estilos do botão do mapa removidos
 });
 
 export default MuseumDetailsScreen;

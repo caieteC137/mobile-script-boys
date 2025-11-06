@@ -14,7 +14,11 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import MuseumCard from '../components/MuseumCard';
 import FavoritesScreen from './FavoritesScreen';
+import ExploreScreen from './ExploreScreen';
+import ProfileScreen from './ProfileScreen';
+import LocationSelector from '../components/LocationSelector';
 import { fetchNearbyMuseums, adaptPlacesToMuseums } from '../services/googlePlaces';
+import { getLocation } from '../services/locationStorage';
 
 const { width: screenWidth } = Dimensions.get('window');
 
@@ -23,25 +27,58 @@ const HomeScreen = ({ onLogout, navigation }) => {
   const [museums, setMuseums] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [currentLocation, setCurrentLocation] = useState(null);
 
   useEffect(() => {
-    const fetchMuseums = async () => {
+    const loadLocationAndMuseums = async () => {
       try {
-        // Coordenadas padrão (ex.: São Paulo) enquanto não há geolocalização ativa
-        const latitude = -23.55052;
-        const longitude = -46.633308;
-        const json = await fetchNearbyMuseums({ latitude, longitude, radius: 4000 });
-        const adapted = adaptPlacesToMuseums(json.results).slice(0, 12);
-        setMuseums(adapted);
+        // Por padrão, não carrega localização salva - usa coordenadas padrão
+        const defaultLocation = { 
+          latitude: -23.55052, 
+          longitude: -46.633308,
+          city: null,
+          state: null
+        };
+        setCurrentLocation(defaultLocation);
+        await fetchMuseumsForLocation(defaultLocation);
       } catch (e) {
-        setError('Não foi possível carregar os museus (Google Places).');
-      } finally {
-        setIsLoading(false);
+        console.error('Erro ao carregar localização:', e);
+        const defaultLocation = { 
+          latitude: -23.55052, 
+          longitude: -46.633308,
+          city: null,
+          state: null
+        };
+        setCurrentLocation(defaultLocation);
+        await fetchMuseumsForLocation(defaultLocation);
       }
     };
 
-    fetchMuseums();
+    loadLocationAndMuseums();
   }, []);
+
+  const fetchMuseumsForLocation = async (location) => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const json = await fetchNearbyMuseums({
+        latitude: location.latitude,
+        longitude: location.longitude,
+        radius: 4000
+      });
+      const adapted = adaptPlacesToMuseums(json.results);
+      setMuseums(adapted);
+    } catch (e) {
+      setError('Não foi possível carregar os museus (Google Places).');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleLocationChange = async (newLocation) => {
+    setCurrentLocation(newLocation);
+    await fetchMuseumsForLocation(newLocation);
+  };
 
   const handleMuseumPress = (museum) => {
     console.log('Museum data:', museum); // Para debug
@@ -76,6 +113,74 @@ const HomeScreen = ({ onLogout, navigation }) => {
       onPress={() => handleMuseumPress(item)}
     />
   );
+
+  // Funções para filtrar e categorizar museus
+  const getFeaturedMuseums = () => {
+    return [...museums]
+      .sort((a, b) => (b.user_ratings_total || 0) - (a.user_ratings_total || 0))
+      .slice(0, 10);
+  };
+
+  const getNearbyMuseums = () => {
+    return museums.slice(0, 10);
+  };
+
+  const getOpenNowMuseums = () => {
+    return museums
+      .filter(m => m.opening_hours?.open_now === true)
+      .slice(0, 10);
+  };
+
+  const getTopRatedMuseums = () => {
+    return [...museums]
+      .filter(m => m.rating && m.rating >= 4.0)
+      .sort((a, b) => (b.rating || 0) - (a.rating || 0))
+      .slice(0, 10);
+  };
+
+  const getArtMuseums = () => {
+    return museums
+      .filter(m => {
+        const types = (m.types || []).map(t => t.toLowerCase());
+        return types.some(t => t.includes('art') || t.includes('gallery'));
+      })
+      .slice(0, 10);
+  };
+
+  const getHistoryMuseums = () => {
+    return museums
+      .filter(m => {
+        const types = (m.types || []).map(t => t.toLowerCase());
+        return types.some(t => t.includes('history') || t.includes('historic'));
+      })
+      .slice(0, 10);
+  };
+
+  const renderCarousel = (title, data, icon) => {
+    if (!data || data.length === 0) return null;
+    
+    return (
+      <View style={styles.section}>
+        <View style={styles.sectionHeader}>
+          <View style={styles.sectionHeaderLeft}>
+            {icon && <Ionicons name={icon} size={20} color="#8B6F47" style={{ marginRight: 8 }} />}
+            <Text style={styles.sectionTitle}>{title}</Text>
+          </View>
+          <TouchableOpacity>
+            <Text style={styles.seeAllText}>Ver todos</Text>
+          </TouchableOpacity>
+        </View>
+        <FlatList
+          data={data}
+          renderItem={renderMuseumCard}
+          keyExtractor={(item) => item.id}
+          horizontal={true}
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.carouselContainer}
+        />
+      </View>
+    );
+  };
 
   const renderTabBar = () => (
     <View style={styles.tabBar}>
@@ -139,30 +244,38 @@ const HomeScreen = ({ onLogout, navigation }) => {
 
   return (
     <View style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <View style={styles.headerContent}>
-          <View style={styles.logoContainer}>
-            <Image 
-              source={require('../assets/logo-museu.png')} 
-              style={styles.logoImage}
-              resizeMode="contain"
-            />
-            <Text style={styles.logoText}>MuseumGuide</Text>
-          </View>
-          
-          <TouchableOpacity style={styles.avatarContainer} onPress={onLogout}>
-            <View style={styles.avatar}>
-              <Ionicons name="person" size={20} color="#8B6F47" />
+      {/* Topbar - apenas na aba home */}
+      {activeTab === 'home' && (
+        <View style={styles.topbar}>
+          <View style={styles.topbarContent}>
+            <View style={styles.logoContainer}>
+              <Image 
+                source={require('../assets/logo-museu.png')} 
+                style={styles.logoImage}
+                resizeMode="contain"
+              />
             </View>
-          </TouchableOpacity>
+            <LocationSelector
+              onLocationChange={handleLocationChange}
+              currentLocation={currentLocation}
+              iconOnly={true}
+            />
+          </View>
         </View>
-      </View>
+      )}
 
       {/* Main Content */}
       {activeTab === 'favorites' ? (
         <View style={styles.content}>
           <FavoritesScreen />
+        </View>
+      ) : activeTab === 'explore' ? (
+        <View style={styles.content}>
+          <ExploreScreen navigation={navigation} currentLocation={currentLocation} />
+        </View>
+      ) : activeTab === 'profile' ? (
+        <View style={styles.content}>
+          <ProfileScreen onLogout={onLogout} />
         </View>
       ) : (
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false} bounces={true}>
@@ -172,35 +285,37 @@ const HomeScreen = ({ onLogout, navigation }) => {
           <Text style={styles.welcomeSubtitle}>Descubra museus incríveis perto de você</Text>
         </View>
 
-        {/* Featured Museums */}
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Museus em destaque</Text>
-            <TouchableOpacity>
-              <Text style={styles.seeAllText}>Ver todos</Text>
-            </TouchableOpacity>
+        {isLoading ? (
+          <View style={{ paddingVertical: 40, alignItems: 'center' }}>
+            <ActivityIndicator size="large" color="#8B6F47" />
+            <Text style={{ marginTop: 16, color: '#666', fontSize: 16 }}>Carregando museus...</Text>
           </View>
-          
-          {isLoading ? (
-            <View style={{ paddingVertical: 24, alignItems: 'center' }}>
-              <ActivityIndicator size="small" color="#8B6F47" />
-              <Text style={{ marginTop: 8, color: '#666' }}>Carregando museus...</Text>
-            </View>
-          ) : error ? (
-            <View style={{ paddingVertical: 24, alignItems: 'center' }}>
-              <Text style={{ color: '#A8402E' }}>{error}</Text>
-            </View>
-          ) : (
-            <FlatList
-              data={museums}
-              renderItem={renderMuseumCard}
-              keyExtractor={(item) => item.id}
-              horizontal={true}
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.carouselContainer}
-            />
-          )}
-        </View>
+        ) : error ? (
+          <View style={{ paddingVertical: 40, alignItems: 'center' }}>
+            <Ionicons name="alert-circle" size={48} color="#A8402E" />
+            <Text style={{ marginTop: 16, color: '#A8402E', fontSize: 16 }}>{error}</Text>
+          </View>
+        ) : (
+          <>
+            {/* Museus em Destaque */}
+            {renderCarousel('Museus em destaque', getFeaturedMuseums(), 'star')}
+
+            {/* Museus Perto de Você */}
+            {renderCarousel('Museus perto de você', getNearbyMuseums(), 'location')}
+
+            {/* Museus Abertos Agora */}
+            {renderCarousel('Museus abertos agora', getOpenNowMuseums(), 'time')}
+
+            {/* Museus Mais Bem Avaliados */}
+            {renderCarousel('Museus mais bem avaliados', getTopRatedMuseums(), 'star-outline')}
+
+            {/* Museus de Arte */}
+            {renderCarousel('Museus de Arte', getArtMuseums(), 'brush')}
+
+            {/* Museus de História */}
+            {renderCarousel('Museus de História', getHistoryMuseums(), 'book')}
+          </>
+        )}
 
         {/* Categories */}
         <View style={styles.section}>
@@ -275,13 +390,18 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#F5F0E8',
   },
-  header: {
+  topbar: {
     backgroundColor: '#8B6F47',
-    paddingTop: 10,
-    paddingBottom: 20,
+    paddingTop: 20,
+    paddingBottom: 16,
     paddingHorizontal: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 4,
   },
-  headerContent: {
+  topbarContent: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
@@ -291,35 +411,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   logoImage: {
-    width: 100,
-    height: 100,
-    marginRight: 12,
-  },
-  logoText: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: '#FFFFFF',
-    fontFamily: 'PlayfairDisplay-Bold',
-  },
-  avatarContainer: {
-    padding: 4,
-  },
-  avatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#FFFFFF',
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    width: 50,
+    height: 50,
   },
   content: {
     flex: 1,
     paddingHorizontal: 20,
+    paddingTop: 20,
   },
   welcomeSection: {
     paddingVertical: 24,
@@ -345,6 +443,10 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 16,
+  },
+  sectionHeaderLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   sectionTitle: {
     fontSize: 20,
