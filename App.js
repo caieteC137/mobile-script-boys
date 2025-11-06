@@ -12,6 +12,7 @@ const Stack = createNativeStackNavigator();
 
 export default function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const navigationRef = React.useRef(null);
 
   const handleLogin = () => {
     setIsLoggedIn(true);
@@ -19,10 +20,17 @@ export default function App() {
 
   const handleLogout = () => {
     setIsLoggedIn(false);
+    // Reset navigation to login screen
+    if (navigationRef.current) {
+      navigationRef.current.reset({
+        index: 0,
+        routes: [{ name: 'Login' }],
+      });
+    }
   };
 
   return (
-    <NavigationContainer>
+    <NavigationContainer ref={navigationRef}>
       <StatusBar style="dark" />
       <Stack.Navigator>
         {!isLoggedIn ? (
@@ -43,13 +51,7 @@ export default function App() {
             <Stack.Screen 
               name="MuseumDetails" 
               component={MuseumDetailsScreen}
-              options={({ route }) => ({
-                title: route.params?.museum?.name || 'Detalhes do Museu',
-                headerStyle: {
-                  backgroundColor: '#F5F0E8',
-                },
-                headerTintColor: '#333',
-              })}
+              options={{ headerShown: false }}
             />
           </>
         )}

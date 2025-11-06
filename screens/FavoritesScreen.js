@@ -49,8 +49,10 @@ const FavoritesScreen = () => {
   );
 
   return (
+    
     <View style={styles.container}>
       <Text style={styles.title}>Favoritos</Text>
+      
 
       {/* Barra de pesquisa */}
       <TextInput
@@ -105,6 +107,8 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#F5F0E8',
+    paddingTop: 20,
+    paddingHorizontal: 20,
   },
   title: {
     fontSize: 20,
