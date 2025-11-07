@@ -1,4 +1,4 @@
-// screens/LoginScreen.js
+// screens/RegistrationScreen.js
 import React, { useState } from 'react';
 import {
   View,
@@ -6,27 +6,44 @@ import {
   StyleSheet,
   ScrollView,
   Alert,
+  TouchableOpacity,
   KeyboardAvoidingView,
   Platform,
   Image,
 } from 'react-native';
 import InputField from '../components/InputField';
 import ButtonPrimary from '../components/ButtonPrimary';
-import { validateCredentials } from '../services/authStorage';
+import { createUser, setCurrentUser } from '../services/userStorage';
 
-const LoginScreen = ({ route, navigation }) => {
-  const { onLogin } = route.params || {};
+const RegistrationScreen = ({ route, navigation }) => {
+  const { onRegister } = route.params || {};
+  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [nameError, setNameError] = useState('');
   const [emailError, setEmailError] = useState('');
   const [passwordError, setPasswordError] = useState('');
+  const [confirmPasswordError, setConfirmPasswordError] = useState('');
 
   const validateInputs = () => {
     let isValid = true;
+    setNameError('');
     setEmailError('');
     setPasswordError('');
+    setConfirmPasswordError('');
 
+    // Validate name
+    if (!name.trim()) {
+      setNameError('Nome é obrigatório');
+      isValid = false;
+    } else if (name.trim().length < 3) {
+      setNameError('O nome deve ter pelo menos 3 caracteres');
+      isValid = false;
+    }
+
+    // Validate email
     if (!email.trim()) {
       setEmailError('E-mail é obrigatório');
       isValid = false;
@@ -35,6 +52,7 @@ const LoginScreen = ({ route, navigation }) => {
       isValid = false;
     }
 
+    // Validate password
     if (!password.trim()) {
       setPasswordError('Senha é obrigatória');
       isValid = false;
@@ -43,31 +61,53 @@ const LoginScreen = ({ route, navigation }) => {
       isValid = false;
     }
 
+    // Validate confirm password
+    if (!confirmPassword.trim()) {
+      setConfirmPasswordError('Confirmação de senha é obrigatória');
+      isValid = false;
+    } else if (password !== confirmPassword) {
+      setConfirmPasswordError('As senhas não coincidem');
+      isValid = false;
+    }
+
     return isValid;
   };
 
-  const handleLogin = async () => {
+  const handleRegister = async () => {
     if (!validateInputs()) {
       return;
     }
 
     setLoading(true);
     try {
-      const result = await validateCredentials(email, password);
-      
+      const result = await createUser({
+        name: name.trim(),
+        email: email.trim(),
+        password: password
+      });
+
       if (result.success) {
+        // Set current user
+        await setCurrentUser(result.user);
+
         Alert.alert(
           'Sucesso',
           result.message,
           [{ 
             text: 'OK', 
             style: 'default',
-            onPress: () => onLogin()
+            onPress: () => {
+              if (onRegister) {
+                onRegister(result.user);
+              } else {
+                navigation.goBack();
+              }
+            }
           }]
         );
       } else {
         Alert.alert(
-          'Falha no login',
+          'Falha no cadastro',
           result.message,
           [{ text: 'OK', style: 'default' }]
         );
@@ -83,14 +123,8 @@ const LoginScreen = ({ route, navigation }) => {
     }
   };
 
-  const handleRegister = () => {
-    navigation.navigate('Registration', {
-      onRegister: (user) => {
-        if (onLogin) {
-          onLogin(user);
-        }
-      }
-    });
+  const handleGoToLogin = () => {
+    navigation.goBack();
   };
 
   return (
@@ -105,7 +139,7 @@ const LoginScreen = ({ route, navigation }) => {
           keyboardShouldPersistTaps="handled"
           bounces={true}
         >
-          <View style={styles.loginCard}>
+          <View style={styles.registrationCard}>
             {/* Logo Area */}
             <View style={styles.logoContainer}>
               <View style={styles.logoPlaceholder}>
@@ -115,12 +149,20 @@ const LoginScreen = ({ route, navigation }) => {
                   resizeMode="contain"
                 />
               </View>
-              <Text style={styles.welcomeTitle}>Bem-vindo ao Museu na Mão</Text>
-              <Text style={styles.welcomeSubtitle}>Faça login para continuar</Text>
+              <Text style={styles.welcomeTitle}>Criar Conta</Text>
+              <Text style={styles.welcomeSubtitle}>Preencha os dados para se cadastrar</Text>
             </View>
 
             {/* Form Fields */}
             <View style={styles.formContainer}>
+              <InputField
+                label="Nome"
+                placeholder="Digite seu nome completo"
+                value={name}
+                onChangeText={setName}
+                error={nameError}
+              />
+
               <InputField
                 label="E-mail"
                 placeholder="Digite seu e-mail"
@@ -139,29 +181,31 @@ const LoginScreen = ({ route, navigation }) => {
                 error={passwordError}
               />
 
+              <InputField
+                label="Confirmar Senha"
+                placeholder="Digite sua senha novamente"
+                value={confirmPassword}
+                onChangeText={setConfirmPassword}
+                secureTextEntry={true}
+                error={confirmPasswordError}
+              />
+
               <ButtonPrimary
-                title="Entrar"
-                onPress={handleLogin}
+                title="Cadastrar"
+                onPress={handleRegister}
                 loading={loading}
                 disabled={loading}
               />
             </View>
 
-            {/* Register Button */}
-            <View style={styles.registerContainer}>
-              <Text style={styles.registerText}>Novo por aqui?</Text>
-              <ButtonPrimary
-                title="Cadastre-se"
-                onPress={handleRegister}
-                variant="outline"
-              />
-            </View>
-
-            {/* Demo Credentials Info */}
-            <View style={styles.demoInfoContainer}>
-              <Text style={styles.demoInfoTitle}>Credenciais de demonstração:</Text>
-              <Text style={styles.demoInfoText}>E-mail: admin@museum.com</Text>
-              <Text style={styles.demoInfoText}>Senha: museum123</Text>
+            {/* Login Link */}
+            <View style={styles.loginContainer}>
+              <Text style={styles.loginText}>
+                Já tem uma conta?{' '}
+                <TouchableOpacity onPress={handleGoToLogin}>
+                  <Text style={styles.loginLink}>Faça login!</Text>
+                </TouchableOpacity>
+              </Text>
             </View>
           </View>
         </ScrollView>
@@ -184,7 +228,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 40,
   },
-  loginCard: {
+  registrationCard: {
     backgroundColor: '#FFFFFF',
     borderRadius: 16,
     shadowColor: '#000',
@@ -236,38 +280,24 @@ const styles = StyleSheet.create({
   formContainer: {
     padding: 30,
   },
-  registerContainer: {
+  loginContainer: {
     paddingHorizontal: 30,
     paddingBottom: 30,
     alignItems: 'center',
   },
-  registerText: {
+  loginText: {
     fontSize: 16,
     fontWeight: '400',
     color: '#8B6F47',
     textAlign: 'center',
-    marginBottom: 16,
   },
-  demoInfoContainer: {
-    backgroundColor: '#F8F8F8',
-    padding: 20,
-    margin: 20,
-    borderRadius: 8,
-    borderLeftWidth: 4,
-    borderLeftColor: '#C17E3A',
-  },
-  demoInfoTitle: {
-    fontSize: 14,
+  loginLink: {
+    fontSize: 16,
     fontWeight: '600',
-    color: '#8B6F47',
-    marginBottom: 8,
-  },
-  demoInfoText: {
-    fontSize: 13,
-    fontWeight: '400',
-    color: '#666',
-    marginBottom: 2,
+    color: '#4A7C59',
+    textDecorationLine: 'underline',
   },
 });
 
-export default LoginScreen;
+export default RegistrationScreen;
+

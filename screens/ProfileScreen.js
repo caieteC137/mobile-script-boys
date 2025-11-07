@@ -1,5 +1,5 @@
 // screens/ProfileScreen.js
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -7,11 +7,46 @@ import {
   ScrollView,
   TouchableOpacity,
   Image,
+  ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { fonts } from '../utils/fonts';
+import { getCurrentUser, clearCurrentUser } from '../services/userStorage';
 
 const ProfileScreen = ({ onLogout }) => {
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadUserData();
+  }, []);
+
+  const loadUserData = async () => {
+    try {
+      const currentUser = await getCurrentUser();
+      setUser(currentUser);
+    } catch (error) {
+      console.error('Error loading user data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleLogout = async () => {
+    await clearCurrentUser();
+    if (onLogout) {
+      onLogout();
+    }
+  };
+
+  if (loading) {
+    return (
+      <View style={[styles.container, styles.loadingContainer]}>
+        <ActivityIndicator size="large" color="#8B6F47" />
+      </View>
+    );
+  }
+
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
       {/* Header Section */}
@@ -21,8 +56,8 @@ const ProfileScreen = ({ onLogout }) => {
             <Ionicons name="person" size={48} color="#8B6F47" />
           </View>
         </View>
-        <Text style={styles.userName}>Usuário</Text>
-        <Text style={styles.userEmail}>usuario@exemplo.com</Text>
+        <Text style={styles.userName}>{user?.name || 'Usuário'}</Text>
+        <Text style={styles.userEmail}>{user?.email || 'usuario@exemplo.com'}</Text>
       </View>
 
       {/* Menu Items */}
@@ -86,7 +121,7 @@ const ProfileScreen = ({ onLogout }) => {
 
       {/* Logout Button */}
       <View style={styles.logoutSection}>
-        <TouchableOpacity style={styles.logoutButton} onPress={onLogout}>
+        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
           <Ionicons name="log-out-outline" size={24} color="#FFFFFF" />
           <Text style={styles.logoutButtonText}>Sair</Text>
         </TouchableOpacity>
@@ -220,6 +255,10 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#666',
     fontFamily: fonts.montserratRegular,
+  },
+  loadingContainer: {
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });
 
