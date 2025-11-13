@@ -317,39 +317,6 @@ const HomeScreen = ({ onLogout, navigation }) => {
           </>
         )}
 
-        {/* Categories */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Categorias</Text>
-          <View style={styles.categoriesGrid}>
-            <TouchableOpacity style={styles.categoryItem}>
-              <View style={[styles.categoryIcon, { backgroundColor: '#C17E3A' }]}>
-                <Ionicons name="library" size={24} color="#FFFFFF" />
-              </View>
-              <Text style={styles.categoryText}>Arte</Text>
-            </TouchableOpacity>
-            
-            <TouchableOpacity style={styles.categoryItem}>
-              <View style={[styles.categoryIcon, { backgroundColor: '#4A7C59' }]}>
-                <Ionicons name="time" size={24} color="#FFFFFF" />
-              </View>
-              <Text style={styles.categoryText}>História</Text>
-            </TouchableOpacity>
-            
-            <TouchableOpacity style={styles.categoryItem}>
-              <View style={[styles.categoryIcon, { backgroundColor: '#A8402E' }]}>
-                <Ionicons name="flask" size={24} color="#FFFFFF" />
-              </View>
-              <Text style={styles.categoryText}>Ciência</Text>
-            </TouchableOpacity>
-            
-            <TouchableOpacity style={styles.categoryItem}>
-              <View style={[styles.categoryIcon, { backgroundColor: '#8B6F47' }]}>
-                <Ionicons name="people" size={24} color="#FFFFFF" />
-              </View>
-              <Text style={styles.categoryText}>Cultura</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
 
         {/* Recent Visits */}
         <View style={styles.section}>
@@ -462,38 +429,6 @@ const styles = StyleSheet.create({
   },
   carouselContainer: {
     paddingRight: 20,
-  },
-  categoriesGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
-  },
-  categoryItem: {
-    width: (screenWidth - 60) / 2,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    padding: 20,
-    alignItems: 'center',
-    marginBottom: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  categoryIcon: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  categoryText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#8B6F47',
-    fontFamily: 'Montserrat-SemiBold',
   },
   recentVisitsContainer: {
     backgroundColor: '#FFFFFF',
