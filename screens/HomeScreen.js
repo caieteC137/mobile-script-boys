@@ -19,6 +19,7 @@ import ProfileScreen from './ProfileScreen';
 import LocationSelector from '../components/LocationSelector';
 import { fetchNearbyMuseums, adaptPlacesToMuseums } from '../services/googlePlaces';
 import { getLocation } from '../services/locationStorage';
+import favoritesStorage from '../services/favoritesStorage';
 
 const { width: screenWidth } = Dimensions.get('window');
 
@@ -28,6 +29,7 @@ const HomeScreen = ({ onLogout, navigation }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [currentLocation, setCurrentLocation] = useState(null);
+  const [favoritesSet, setFavoritesSet] = useState(new Set());
 
   useEffect(() => {
     const loadLocationAndMuseums = async () => {
@@ -41,6 +43,11 @@ const HomeScreen = ({ onLogout, navigation }) => {
         };
         setCurrentLocation(defaultLocation);
         await fetchMuseumsForLocation(defaultLocation);
+        
+        // Carregar favoritos
+        const favs = await favoritesStorage.getFavorites();
+        const favSet = new Set(favs.map(f => f.place_id || f.id || f.reference || f.name));
+        setFavoritesSet(favSet);
       } catch (e) {
         console.error('Erro ao carregar localização:', e);
         const defaultLocation = { 
@@ -102,17 +109,45 @@ const HomeScreen = ({ onLogout, navigation }) => {
     });
   };
 
-  const renderMuseumCard = ({ item }) => (
-    <MuseumCard
-      title={item.title}
-      subtitle={item.subtitle}
-      description={item.description}
-      rating={item.rating}
-      distance={item.distance}
-      image={item.image}
-      onPress={() => handleMuseumPress(item)}
-    />
-  );
+  const toggleFavorite = async (museum) => {
+    try {
+      const museumId = museum.place_id || museum.id || museum.reference || museum.name;
+      const newSet = new Set(favoritesSet);
+      
+      if (newSet.has(museumId)) {
+        // Remover
+        newSet.delete(museumId);
+        await favoritesStorage.removeFavorite(museum);
+      } else {
+        // Adicionar
+        newSet.add(museumId);
+        await favoritesStorage.addFavorite(museum);
+      }
+      
+      setFavoritesSet(newSet);
+    } catch (e) {
+      console.error('Erro ao alternar favorito:', e);
+    }
+  };
+
+  const renderMuseumCard = ({ item }) => {
+    const museumId = item.place_id || item.id || item.reference || item.name;
+    const isFav = favoritesSet.has(museumId);
+
+    return (
+      <MuseumCard
+        title={item.title}
+        subtitle={item.subtitle}
+        description={item.description}
+        rating={item.rating}
+        distance={item.distance}
+        image={item.image}
+        isFavorite={isFav}
+        onFavoritePress={() => toggleFavorite(item)}
+        onPress={() => handleMuseumPress(item)}
+      />
+    );
+  };
 
   // Funções para filtrar e categorizar museus
   const getFeaturedMuseums = () => {

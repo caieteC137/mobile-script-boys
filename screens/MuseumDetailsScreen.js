@@ -3,11 +3,13 @@ import { View, Text, StyleSheet, Image, ScrollView, Linking, ActivityIndicator, 
 import { MaterialIcons, Ionicons } from '@expo/vector-icons';
 import { fonts } from '../utils/fonts';
 import { getPlacePhotoUrl } from '../services/googlePlaces';
+import favoritesStorage from '../services/favoritesStorage';
 
 const MuseumDetailsScreen = ({ route, navigation }) => {
   const { museum } = route.params;
   const [wiki, setWiki] = useState(null);
   const [loadingWiki, setLoadingWiki] = useState(false);
+  const [isFavorite, setIsFavorite] = useState(false);
 
 
   useEffect(() => {
@@ -42,6 +44,16 @@ const MuseumDetailsScreen = ({ route, navigation }) => {
       setLoadingWiki(false);
     };
     fetchWiki();
+    // checar se já é favorito
+    const checkFav = async () => {
+      try {
+        const fav = await favoritesStorage.isFavorite(museum);
+        setIsFavorite(!!fav);
+      } catch (e) {
+        setIsFavorite(false);
+      }
+    };
+    checkFav();
   }, [museum.name, museum.title]);
 
 
@@ -105,6 +117,27 @@ const MuseumDetailsScreen = ({ route, navigation }) => {
               ]} />
             </View>
           )}
+
+          {/* Botão de Favoritar */}
+          <TouchableOpacity
+            style={styles.favoriteButton}
+            onPress={async () => {
+              try {
+                if (isFavorite) {
+                  await favoritesStorage.removeFavorite(museum);
+                  setIsFavorite(false);
+                } else {
+                  await favoritesStorage.addFavorite(museum);
+                  setIsFavorite(true);
+                }
+              } catch (e) {
+                console.error('Erro ao alternar favorito:', e);
+              }
+            }}
+          >
+            <MaterialIcons name={isFavorite ? 'favorite' : 'favorite-border'} size={24} color="#A8402E" style={styles.favoriteIcon} />
+            <Text style={styles.favoriteButtonText}>{isFavorite ? 'Remover dos Favoritos' : 'Adicionar aos Favoritos'}</Text>
+          </TouchableOpacity>
 
           {/* Types */}
           {museum.types && museum.types.length > 0 && (
@@ -284,6 +317,31 @@ const styles = StyleSheet.create({
     color: '#007AFF',
     fontSize: 15,
     marginTop: 8,
+    fontFamily: fonts.montserratSemiBold,
+  },
+  favoriteButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-start',
+    marginTop: 16,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#EDE3D6',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  favoriteIcon: {
+    marginRight: 10,
+  },
+  favoriteButtonText: {
+    color: '#8B6F47',
+    fontSize: 16,
     fontFamily: fonts.montserratSemiBold,
   },
 });
