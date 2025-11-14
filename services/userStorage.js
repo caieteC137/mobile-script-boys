@@ -19,7 +19,8 @@ const initializeUsers = async () => {
             name: 'Admin',
             email: 'admin@museum.com',
             password: 'museum123',
-            createdAt: new Date().toISOString()
+            createdAt: new Date().toISOString(),
+            profileImage: null
           }
         ]
       };
@@ -114,7 +115,8 @@ export const createUser = async (userData) => {
       name: name.trim(),
       email: email.toLowerCase().trim(),
       password: password, // In a real app, this should be hashed
-      createdAt: new Date().toISOString()
+      createdAt: new Date().toISOString(),
+      profileImage: null
     };
 
     // Add new user
@@ -129,7 +131,8 @@ export const createUser = async (userData) => {
       user: {
         id: newUser.id,
         name: newUser.name,
-        email: newUser.email
+        email: newUser.email,
+        profileImage: newUser.profileImage
       }
     };
   } catch (error) {
@@ -166,7 +169,8 @@ export const validateUserCredentials = async (email, password) => {
       user: {
         id: user.id,
         name: user.name,
-        email: user.email
+        email: user.email,
+        profileImage: user.profileImage
       }
     };
   } catch (error) {
@@ -207,6 +211,30 @@ export const clearCurrentUser = async () => {
   }
 };
 
+export const updateUserProfileImage = async (userId, imageUri) => {
+  try {
+    const data = await initializeUsers();
+    const users = data.users;
+
+    const index = users.findIndex(u => u.id === userId);
+
+    if (index === -1) return;
+
+    users[index].profileImage = imageUri;
+
+    await AsyncStorage.setItem(USERS_STORAGE_KEY, JSON.stringify({ users }));
+
+    // também atualiza o usuário logado, se for o mesmo
+    const currentUser = await getCurrentUser();
+    if (currentUser && currentUser.id === userId) {
+      currentUser.profileImage = imageUri;
+      await AsyncStorage.setItem(CURRENT_USER_KEY, JSON.stringify(currentUser));
+    }
+  } catch (error) {
+    console.error('Error updating profile image:', error);
+  }
+};
+
 // Export users data as JSON (for debugging/backup)
 export const exportUsersJSON = async () => {
   try {
@@ -227,6 +255,7 @@ export default {
   setCurrentUser,
   getCurrentUser,
   clearCurrentUser,
+  updateUserProfileImage,
   exportUsersJSON
 };
 
