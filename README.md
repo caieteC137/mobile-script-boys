@@ -124,26 +124,7 @@ Usado para:
 * Endereços
 * Rating
 * Informações gerais
-
-### Função principal usada:
-
-```js
-getPlacePhotoUrl(photoReference, tamanho)
-```
-
----
-
-## 📝 Atualizações Recentes no Projeto
-
-✔ Remoção de URLs de imagens com chave hardcoded
-✔ Substituição por `getPlacePhotoUrl()` em:
-
-* ExploreScreen.js
-* MuseumDetailsScreen.js
-
-✔ Ajuste de carregamento automático da foto de perfil
-✔ Melhorias na organização de componentes e serviços
-
+  
 ---
 
 ## 👨‍💻 Desenvolvedores
