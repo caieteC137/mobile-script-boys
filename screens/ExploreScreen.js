@@ -13,7 +13,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import MuseumGridCard from '../components/MuseumGridCard';
-import { fetchNearbyMuseums, adaptPlacesToMuseums } from '../services/googlePlaces';
+import { fetchNearbyMuseums, adaptPlacesToMuseums, getPlacePhotoUrl } from '../services/googlePlaces';
 import { getLocation } from '../services/locationStorage';
 
 const { width: screenWidth } = Dimensions.get('window');
@@ -127,10 +127,10 @@ const ExploreScreen = ({ navigation, currentLocation: propLocation }) => {
   const renderMuseumCard = ({ item, index }) => {
     const getPhotoUrl = (photoReference) => {
       if (!photoReference) return null;
-      return `https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photo_reference=${photoReference}&key=AIzaSyDtPU6QBFbi6tPRq6mcFHURyNDGcsQ-Yuc`;
+      return getPlacePhotoUrl(photoReference, 400);
     };
 
-    const imageSource = item.photos && item.photos[0] 
+    const imageSource = item.photos && item.photos[0]
       ? { uri: getPhotoUrl(item.photos[0].photo_reference) }
       : item.image || { uri: 'https://via.placeholder.com/400x300/8B6F47/FFFFFF?text=Museu' };
 
