@@ -44,6 +44,8 @@ const ProfileScreen = ({ onLogout }) => {
     try {
       const currentUser = await getCurrentUser();
       setUser(currentUser);
+      // Inicializa a imagem de perfil a partir do usuário armazenado (se houver)
+      setProfileImage(currentUser?.profileImage || null);
     } catch (error) {
       console.error('Error loading user data:', error);
     } finally {

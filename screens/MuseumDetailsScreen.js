@@ -2,15 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, Image, ScrollView, Linking, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { MaterialIcons, Ionicons } from '@expo/vector-icons';
 import { fonts } from '../utils/fonts';
+import { getPlacePhotoUrl } from '../services/googlePlaces';
 
 const MuseumDetailsScreen = ({ route, navigation }) => {
   const { museum } = route.params;
   const [wiki, setWiki] = useState(null);
   const [loadingWiki, setLoadingWiki] = useState(false);
 
-  const getPhotoUrl = (photoReference) => {
-    return `https://maps.googleapis.com/maps/api/place/photo?maxwidth=800&photo_reference=${photoReference}&key=AIzaSyDtPU6QBFbi6tPRq6mcFHURyNDGcsQ-Yuc`;
-  };
 
   useEffect(() => {
     const fetchWiki = async () => {
@@ -65,8 +63,8 @@ const MuseumDetailsScreen = ({ route, navigation }) => {
         contentContainerStyle={styles.scrollContent}
       >
         {museum.photos && museum.photos[0] && (
-          <Image 
-            source={{ uri: getPhotoUrl(museum.photos[0].photo_reference) }}
+          <Image
+            source={{ uri: getPlacePhotoUrl(museum.photos[0].photo_reference, 800) }}
             style={styles.image}
             resizeMode="cover"
           />
