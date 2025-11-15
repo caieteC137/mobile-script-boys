@@ -15,6 +15,7 @@ import { Ionicons } from '@expo/vector-icons';
 import MuseumGridCard from '../components/MuseumGridCard';
 import { fetchNearbyMuseums, adaptPlacesToMuseums, getPlacePhotoUrl } from '../services/googlePlaces';
 import { getLocation } from '../services/locationStorage';
+import favoritesStorage from '../services/favoritesStorage';
 
 const { width: screenWidth } = Dimensions.get('window');
 
@@ -26,12 +27,18 @@ const ExploreScreen = ({ navigation, currentLocation: propLocation }) => {
   const [error, setError] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [nextPageToken, setNextPageToken] = useState(null);
+  const [favoritesSet, setFavoritesSet] = useState(new Set());
 
   useEffect(() => {
     const loadLocationAndMuseums = async () => {
       try {
         const location = propLocation || await getLocation();
         await fetchMuseumsForLocation(location);
+        
+        // Carregar favoritos
+        const favs = await favoritesStorage.getFavorites();
+        const favSet = new Set(favs.map(f => f.place_id || f.id || f.reference || f.name));
+        setFavoritesSet(favSet);
       } catch (e) {
         console.error('Erro ao carregar localização:', e);
         const defaultLocation = { latitude: -23.55052, longitude: -46.633308 };
@@ -124,6 +131,27 @@ const ExploreScreen = ({ navigation, currentLocation: propLocation }) => {
     });
   };
 
+  const toggleFavorite = async (museum) => {
+    try {
+      const museumId = museum.place_id || museum.id || museum.reference || museum.name;
+      const newSet = new Set(favoritesSet);
+      
+      if (newSet.has(museumId)) {
+        // Remover
+        newSet.delete(museumId);
+        await favoritesStorage.removeFavorite(museum);
+      } else {
+        // Adicionar
+        newSet.add(museumId);
+        await favoritesStorage.addFavorite(museum);
+      }
+      
+      setFavoritesSet(newSet);
+    } catch (e) {
+      console.error('Erro ao alternar favorito:', e);
+    }
+  };
+
   const renderMuseumCard = ({ item, index }) => {
     const getPhotoUrl = (photoReference) => {
       if (!photoReference) return null;
@@ -134,6 +162,9 @@ const ExploreScreen = ({ navigation, currentLocation: propLocation }) => {
       ? { uri: getPhotoUrl(item.photos[0].photo_reference) }
       : item.image || { uri: 'https://via.placeholder.com/400x300/8B6F47/FFFFFF?text=Museu' };
 
+    const museumId = item.place_id || item.id || item.reference || item.name;
+    const isFav = favoritesSet.has(museumId);
+
     return (
       <View style={styles.cardWrapper}>
         <MuseumGridCard
@@ -142,6 +173,8 @@ const ExploreScreen = ({ navigation, currentLocation: propLocation }) => {
           image={imageSource}
           rating={item.rating || 0}
           openNow={item.opening_hours?.open_now || false}
+          isFavorite={isFav}
+          onFavoritePress={() => toggleFavorite(item)}
           onPress={() => handleMuseumPress(item)}
         />
       </View>
