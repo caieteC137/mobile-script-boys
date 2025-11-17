@@ -8,6 +8,7 @@ import LoginScreen from './screens/LoginScreen';
 import RegistrationScreen from './screens/RegistrationScreen';
 import HomeScreen from './screens/HomeScreen';
 import MuseumDetailsScreen from './screens/MuseumDetailsScreen';
+import MuseumsCategoryScreen from './screens/MuseumsCategoryScreen';
 import { getCurrentUser } from './services/userStorage';
 
 const Stack = createNativeStackNavigator();
@@ -87,6 +88,11 @@ export default function App() {
             <Stack.Screen 
               name="MuseumDetails" 
               component={MuseumDetailsScreen}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen 
+              name="MuseumCategory" 
+              component={MuseumsCategoryScreen}
               options={{ headerShown: false }}
             />
           </>

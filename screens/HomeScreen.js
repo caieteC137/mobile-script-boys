@@ -161,9 +161,12 @@ const HomeScreen = ({ onLogout, navigation }) => {
   };
 
   const getOpenNowMuseums = () => {
-    return museums
-      .filter(m => m.opening_hours?.open_now === true)
-      .slice(0, 10);
+    const filtered = museums.filter(m => {
+      const isOpen = m.opening_hours?.open_now === true;
+      return isOpen;
+    }).slice(0, 10);
+    
+    return filtered;
   };
 
   const getTopRatedMuseums = () => {
@@ -191,8 +194,16 @@ const HomeScreen = ({ onLogout, navigation }) => {
       .slice(0, 10);
   };
 
-  const renderCarousel = (title, data, icon) => {
+  const renderCarousel = (title, data, icon, categoryKey) => {
     if (!data || data.length === 0) return null;
+    
+    const handleSeeAll = () => {
+      navigation.navigate('MuseumCategory', {
+        museums: data,
+        categoryTitle: title,
+        categoryIcon: icon
+      });
+    };
     
     return (
       <View style={styles.section}>
@@ -201,7 +212,7 @@ const HomeScreen = ({ onLogout, navigation }) => {
             {icon && <Ionicons name={icon} size={20} color="#8B6F47" style={{ marginRight: 8 }} />}
             <Text style={styles.sectionTitle}>{title}</Text>
           </View>
-          <TouchableOpacity>
+          <TouchableOpacity onPress={handleSeeAll}>
             <Text style={styles.seeAllText}>Ver todos</Text>
           </TouchableOpacity>
         </View>
