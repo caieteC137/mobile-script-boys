@@ -406,7 +406,7 @@ const styles = StyleSheet.create({
   topbar: {
     backgroundColor: '#8B6F47',
     paddingTop: 20,
-    paddingBottom: 16,
+    paddingBottom: 5,
     paddingHorizontal: 20,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
@@ -424,8 +424,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   logoImage: {
-    width: 50,
-    height: 50,
+    width: 90,
+    height: 90,
   },
   content: {
     flex: 1,
