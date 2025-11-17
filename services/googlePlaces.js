@@ -51,8 +51,11 @@ export function adaptPlacesToMuseums(results = []) {
       image: photoRef ? { uri: getPlacePhotoUrl(photoRef, 600) } : undefined,
       photos: place.photos,
       types: place.types || ['museum'],
-      opening_hours: place.opening_hours || { open_now: false },
+      opening_hours: place.opening_hours ? { open_now: place.opening_hours.open_now === true } : { open_now: false },
       formatted_address: place.formatted_address || place.vicinity || 'Address not available',
+      place_id: place.place_id,
+      latitude: place.geometry?.location?.lat,
+      longitude: place.geometry?.location?.lng,
     };
   });
 }
