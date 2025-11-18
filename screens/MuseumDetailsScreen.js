@@ -74,13 +74,19 @@ const MuseumDetailsScreen = ({ route, navigation }) => {
         bounces={true}
         contentContainerStyle={styles.scrollContent}
       >
-        {museum.photos && museum.photos[0] && (
+        {(museum.photos && museum.photos[0] && museum.photos[0].photo_reference ? (
           <Image
             source={{ uri: getPlacePhotoUrl(museum.photos[0].photo_reference, 800) }}
             style={styles.image}
             resizeMode="cover"
           />
-        )}
+        ) : museum.image ? (
+          <Image
+            source={museum.image}
+            style={styles.image}
+            resizeMode="cover"
+          />
+        ) : null)}
         
         <View style={styles.content}>
           <Text style={styles.title}>{museum.name || museum.title}</Text>

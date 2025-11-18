@@ -19,7 +19,7 @@ import {
   updateUserProfileImage 
 } from '../services/userStorage';
 
-const ProfileScreen = ({ onLogout }) => {
+const ProfileScreen = ({ onLogout, navigation }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [profileImage, setProfileImage] = useState(null);
@@ -54,10 +54,26 @@ const ProfileScreen = ({ onLogout }) => {
   };
 
   const handleLogout = async () => {
-    await clearCurrentUser();
-    if (onLogout) {
-      onLogout();
-    }
+    Alert.alert(
+      'Confirmar Saída',
+      'Tem certeza que deseja sair?',
+      [
+        {
+          text: 'Cancelar',
+          style: 'cancel',
+        },
+        {
+          text: 'Sair',
+          style: 'destructive',
+          onPress: async () => {
+            await clearCurrentUser();
+            if (onLogout) {
+              onLogout();
+            }
+          },
+        },
+      ]
+    );
   };
 
   const takePicture = async () => {
@@ -173,7 +189,10 @@ const ProfileScreen = ({ onLogout }) => {
           <Ionicons name="chevron-forward" size={20} color="#8B6F47" />
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.menuItem}>
+        <TouchableOpacity 
+          style={styles.menuItem}
+          onPress={() => navigation?.navigate('About')}
+        >
           <View style={styles.menuItemLeft}>
             <Ionicons name="information-circle-outline" size={24} color="#8B6F47" />
             <Text style={styles.menuItemText}>Sobre o App</Text>

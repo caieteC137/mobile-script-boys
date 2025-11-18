@@ -2,10 +2,11 @@
 import React, { useMemo, useState, useCallback } from 'react';
 import { View, Text, StyleSheet, TextInput, TouchableOpacity, FlatList } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useFocusEffect } from '@react-navigation/native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import favoritesStorage from '../services/favoritesStorage';
 
 const FavoritesScreen = () => {
+  const navigation = useNavigation();
   const [query, setQuery] = useState('');
   const [filterOpen, setFilterOpen] = useState(false);
   const [activeFilter, setActiveFilter] = useState('Todos');
@@ -72,8 +73,15 @@ const FavoritesScreen = () => {
   return (
     
     <View style={styles.container}>
-      <Text style={styles.title}>Favoritos</Text>
-      
+      <View style={styles.header}>
+        <Text style={styles.title}>Favoritos</Text>
+        <TouchableOpacity
+          style={styles.addButton}
+          onPress={() => navigation.navigate('AddMuseum')}
+        >
+          <Ionicons name="add-circle" size={28} color="#8B6F47" />
+        </TouchableOpacity>
+      </View>
 
       {/* Barra de pesquisa */}
       <TextInput
@@ -131,13 +139,21 @@ const styles = StyleSheet.create({
     paddingTop: 20,
     paddingHorizontal: 20,
   },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 16,
+    marginBottom: 12,
+  },
   title: {
     fontSize: 20,
     fontWeight: '700',
     color: '#8B6F47',
-    marginTop: 16,
-    marginBottom: 12,
     fontFamily: 'PlayfairDisplay-Bold',
+  },
+  addButton: {
+    padding: 4,
   },
   search: {
     height: 48,
