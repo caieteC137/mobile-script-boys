@@ -20,10 +20,12 @@ import LocationSelector from '../components/LocationSelector';
 import { fetchNearbyMuseums, adaptPlacesToMuseums } from '../services/googlePlaces';
 import { getLocation } from '../services/locationStorage';
 import favoritesStorage from '../services/favoritesStorage';
+import customMuseumsStorage from '../services/customMuseumsStorage';
 
 const { width: screenWidth } = Dimensions.get('window');
 
-const HomeScreen = ({ onLogout, navigation }) => {
+const HomeScreen = ({ route, navigation }) => {
+  const onLogout = route?.params?.onLogout;
   const [activeTab, setActiveTab] = useState('home');
   const [museums, setMuseums] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -62,21 +64,43 @@ const HomeScreen = ({ onLogout, navigation }) => {
     };
 
     loadLocationAndMuseums();
-  }, []);
+    
+    // Listener para recarregar quando voltar da tela de adicionar museu
+    const unsubscribe = navigation.addListener('focus', () => {
+      loadLocationAndMuseums();
+    });
+
+    return unsubscribe;
+  }, [navigation]);
 
   const fetchMuseumsForLocation = async (location) => {
     setIsLoading(true);
     setError(null);
     try {
+      // Buscar museus da API do Google Places
       const json = await fetchNearbyMuseums({
         latitude: location.latitude,
         longitude: location.longitude,
         radius: 4000
       });
       const adapted = adaptPlacesToMuseums(json.results);
-      setMuseums(adapted);
+      
+      // Buscar museus customizados (armazenados localmente)
+      const customMuseums = await customMuseumsStorage.getCustomMuseums();
+      
+      // Combinar ambos os arrays (museus customizados primeiro)
+      const allMuseums = [...customMuseums, ...adapted];
+      
+      setMuseums(allMuseums);
     } catch (e) {
-      setError('Não foi possível carregar os museus (Google Places).');
+      console.error('Erro ao carregar museus:', e);
+      // Mesmo com erro na API, ainda carregar museus customizados
+      try {
+        const customMuseums = await customMuseumsStorage.getCustomMuseums();
+        setMuseums(customMuseums);
+      } catch (customError) {
+        setError('Não foi possível carregar os museus.');
+      }
     } finally {
       setIsLoading(false);
     }
@@ -219,7 +243,7 @@ const HomeScreen = ({ onLogout, navigation }) => {
         <FlatList
           data={data}
           renderItem={renderMuseumCard}
-          keyExtractor={(item) => item.id}
+          keyExtractor={(item) => item.place_id || item.id || item.reference || `museum_${item.title}`}
           horizontal={true}
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.carouselContainer}
@@ -301,11 +325,21 @@ const HomeScreen = ({ onLogout, navigation }) => {
                 resizeMode="contain"
               />
             </View>
-            <LocationSelector
-              onLocationChange={handleLocationChange}
-              currentLocation={currentLocation}
-              iconOnly={true}
-            />
+            <View style={styles.topbarRight}>
+              <TouchableOpacity
+                style={styles.addButton}
+                onPress={() => navigation.navigate('AddMuseum')}
+              >
+                <Ionicons name="add" size={24} color="#FFFFFF" />
+              </TouchableOpacity>
+              <View style={{ marginLeft: 12 }}>
+                <LocationSelector
+                  onLocationChange={handleLocationChange}
+                  currentLocation={currentLocation}
+                  iconOnly={true}
+                />
+              </View>
+            </View>
           </View>
         </View>
       )}
@@ -321,7 +355,7 @@ const HomeScreen = ({ onLogout, navigation }) => {
         </View>
       ) : activeTab === 'profile' ? (
         <View style={styles.content}>
-          <ProfileScreen onLogout={onLogout} />
+          <ProfileScreen onLogout={onLogout} navigation={navigation} />
         </View>
       ) : (
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false} bounces={true}>
@@ -417,6 +451,18 @@ const styles = StyleSheet.create({
   topbarContent: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  topbarRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  addButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    justifyContent: 'center',
     alignItems: 'center',
   },
   logoContainer: {

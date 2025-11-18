@@ -9,6 +9,8 @@ import RegistrationScreen from './screens/RegistrationScreen';
 import HomeScreen from './screens/HomeScreen';
 import MuseumDetailsScreen from './screens/MuseumDetailsScreen';
 import MuseumsCategoryScreen from './screens/MuseumsCategoryScreen';
+import AddMuseumScreen from './screens/AddMuseumScreen';
+import AboutScreen from './screens/AboutScreen';
 import { getCurrentUser } from './services/userStorage';
 
 const Stack = createNativeStackNavigator();
@@ -41,13 +43,9 @@ export default function App() {
 
   const handleLogout = () => {
     setIsLoggedIn(false);
-    // Reset navigation to login screen
-    if (navigationRef.current) {
-      navigationRef.current.reset({
-        index: 0,
-        routes: [{ name: 'Login' }],
-      });
-    }
+    // Não precisa fazer reset manualmente
+    // O React Navigation vai automaticamente renderizar as rotas de login
+    // quando isLoggedIn mudar para false
   };
 
   if (isLoading) {
@@ -93,6 +91,16 @@ export default function App() {
             <Stack.Screen 
               name="MuseumCategory" 
               component={MuseumsCategoryScreen}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen 
+              name="AddMuseum" 
+              component={AddMuseumScreen}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen 
+              name="About" 
+              component={AboutScreen}
               options={{ headerShown: false }}
             />
           </>
