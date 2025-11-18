@@ -19,7 +19,7 @@ import {
   updateUserProfileImage 
 } from '../services/userStorage';
 
-const ProfileScreen = ({ onLogout, navigation }) => {
+const ProfileScreen = ({ onLogout, navigation, onNavigateToFavorites }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [profileImage, setProfileImage] = useState(null);
@@ -157,7 +157,14 @@ const ProfileScreen = ({ onLogout, navigation }) => {
           <Ionicons name="chevron-forward" size={20} color="#8B6F47" />
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.menuItem}>
+        <TouchableOpacity 
+          style={styles.menuItem}
+          onPress={() => {
+            if (onNavigateToFavorites) {
+              onNavigateToFavorites();
+            }
+          }}
+        >
           <View style={styles.menuItemLeft}>
             <Ionicons name="heart-outline" size={24} color="#8B6F47" />
             <Text style={styles.menuItemText}>Favoritos</Text>

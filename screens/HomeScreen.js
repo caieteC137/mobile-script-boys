@@ -318,13 +318,17 @@ const HomeScreen = ({ route, navigation }) => {
       {activeTab === 'home' && (
         <View style={styles.topbar}>
           <View style={styles.topbarContent}>
-            <View style={styles.logoContainer}>
+            <TouchableOpacity
+              style={styles.logoContainer}
+              onPress={() => navigation.navigate('About')}
+              activeOpacity={0.7}
+            >
               <Image 
                 source={require('../assets/logo-museu.png')} 
                 style={styles.logoImage}
                 resizeMode="contain"
               />
-            </View>
+            </TouchableOpacity>
             <View style={styles.topbarRight}>
               <TouchableOpacity
                 style={styles.addButton}
@@ -355,7 +359,11 @@ const HomeScreen = ({ route, navigation }) => {
         </View>
       ) : activeTab === 'profile' ? (
         <View style={styles.content}>
-          <ProfileScreen onLogout={onLogout} navigation={navigation} />
+          <ProfileScreen 
+            onLogout={onLogout} 
+            navigation={navigation}
+            onNavigateToFavorites={() => setActiveTab('favorites')}
+          />
         </View>
       ) : (
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false} bounces={true}>
