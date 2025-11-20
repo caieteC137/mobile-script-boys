@@ -19,15 +19,19 @@ import ProfileScreen from './ProfileScreen';
 import LocationSelector from '../components/LocationSelector';
 import { fetchNearbyMuseums, adaptPlacesToMuseums } from '../services/googlePlaces';
 import { getLocation } from '../services/locationStorage';
+import favoritesStorage from '../services/favoritesStorage';
+import customMuseumsStorage from '../services/customMuseumsStorage';
 
 const { width: screenWidth } = Dimensions.get('window');
 
-const HomeScreen = ({ onLogout, navigation }) => {
+const HomeScreen = ({ route, navigation }) => {
+  const onLogout = route?.params?.onLogout;
   const [activeTab, setActiveTab] = useState('home');
   const [museums, setMuseums] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [currentLocation, setCurrentLocation] = useState(null);
+  const [favoritesSet, setFavoritesSet] = useState(new Set());
 
   useEffect(() => {
     const loadLocationAndMuseums = async () => {
@@ -41,6 +45,11 @@ const HomeScreen = ({ onLogout, navigation }) => {
         };
         setCurrentLocation(defaultLocation);
         await fetchMuseumsForLocation(defaultLocation);
+        
+        // Carregar favoritos
+        const favs = await favoritesStorage.getFavorites();
+        const favSet = new Set(favs.map(f => f.place_id || f.id || f.reference || f.name));
+        setFavoritesSet(favSet);
       } catch (e) {
         console.error('Erro ao carregar localização:', e);
         const defaultLocation = { 
@@ -55,21 +64,43 @@ const HomeScreen = ({ onLogout, navigation }) => {
     };
 
     loadLocationAndMuseums();
-  }, []);
+    
+    // Listener para recarregar quando voltar da tela de adicionar museu
+    const unsubscribe = navigation.addListener('focus', () => {
+      loadLocationAndMuseums();
+    });
+
+    return unsubscribe;
+  }, [navigation]);
 
   const fetchMuseumsForLocation = async (location) => {
     setIsLoading(true);
     setError(null);
     try {
+      // Buscar museus da API do Google Places
       const json = await fetchNearbyMuseums({
         latitude: location.latitude,
         longitude: location.longitude,
         radius: 4000
       });
       const adapted = adaptPlacesToMuseums(json.results);
-      setMuseums(adapted);
+      
+      // Buscar museus customizados (armazenados localmente)
+      const customMuseums = await customMuseumsStorage.getCustomMuseums();
+      
+      // Combinar ambos os arrays (museus customizados primeiro)
+      const allMuseums = [...customMuseums, ...adapted];
+      
+      setMuseums(allMuseums);
     } catch (e) {
-      setError('Não foi possível carregar os museus (Google Places).');
+      console.error('Erro ao carregar museus:', e);
+      // Mesmo com erro na API, ainda carregar museus customizados
+      try {
+        const customMuseums = await customMuseumsStorage.getCustomMuseums();
+        setMuseums(customMuseums);
+      } catch (customError) {
+        setError('Não foi possível carregar os museus.');
+      }
     } finally {
       setIsLoading(false);
     }
@@ -102,17 +133,45 @@ const HomeScreen = ({ onLogout, navigation }) => {
     });
   };
 
-  const renderMuseumCard = ({ item }) => (
-    <MuseumCard
-      title={item.title}
-      subtitle={item.subtitle}
-      description={item.description}
-      rating={item.rating}
-      distance={item.distance}
-      image={item.image}
-      onPress={() => handleMuseumPress(item)}
-    />
-  );
+  const toggleFavorite = async (museum) => {
+    try {
+      const museumId = museum.place_id || museum.id || museum.reference || museum.name;
+      const newSet = new Set(favoritesSet);
+      
+      if (newSet.has(museumId)) {
+        // Remover
+        newSet.delete(museumId);
+        await favoritesStorage.removeFavorite(museum);
+      } else {
+        // Adicionar
+        newSet.add(museumId);
+        await favoritesStorage.addFavorite(museum);
+      }
+      
+      setFavoritesSet(newSet);
+    } catch (e) {
+      console.error('Erro ao alternar favorito:', e);
+    }
+  };
+
+  const renderMuseumCard = ({ item }) => {
+    const museumId = item.place_id || item.id || item.reference || item.name;
+    const isFav = favoritesSet.has(museumId);
+
+    return (
+      <MuseumCard
+        title={item.title}
+        subtitle={item.subtitle}
+        description={item.description}
+        rating={item.rating}
+        distance={item.distance}
+        image={item.image}
+        isFavorite={isFav}
+        onFavoritePress={() => toggleFavorite(item)}
+        onPress={() => handleMuseumPress(item)}
+      />
+    );
+  };
 
   // Funções para filtrar e categorizar museus
   const getFeaturedMuseums = () => {
@@ -126,9 +185,12 @@ const HomeScreen = ({ onLogout, navigation }) => {
   };
 
   const getOpenNowMuseums = () => {
-    return museums
-      .filter(m => m.opening_hours?.open_now === true)
-      .slice(0, 10);
+    const filtered = museums.filter(m => {
+      const isOpen = m.opening_hours?.open_now === true;
+      return isOpen;
+    }).slice(0, 10);
+    
+    return filtered;
   };
 
   const getTopRatedMuseums = () => {
@@ -156,8 +218,16 @@ const HomeScreen = ({ onLogout, navigation }) => {
       .slice(0, 10);
   };
 
-  const renderCarousel = (title, data, icon) => {
+  const renderCarousel = (title, data, icon, categoryKey) => {
     if (!data || data.length === 0) return null;
+    
+    const handleSeeAll = () => {
+      navigation.navigate('MuseumCategory', {
+        museums: data,
+        categoryTitle: title,
+        categoryIcon: icon
+      });
+    };
     
     return (
       <View style={styles.section}>
@@ -166,14 +236,14 @@ const HomeScreen = ({ onLogout, navigation }) => {
             {icon && <Ionicons name={icon} size={20} color="#8B6F47" style={{ marginRight: 8 }} />}
             <Text style={styles.sectionTitle}>{title}</Text>
           </View>
-          <TouchableOpacity>
+          <TouchableOpacity onPress={handleSeeAll}>
             <Text style={styles.seeAllText}>Ver todos</Text>
           </TouchableOpacity>
         </View>
         <FlatList
           data={data}
           renderItem={renderMuseumCard}
-          keyExtractor={(item) => item.id}
+          keyExtractor={(item) => item.place_id || item.id || item.reference || `museum_${item.title}`}
           horizontal={true}
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.carouselContainer}
@@ -248,18 +318,32 @@ const HomeScreen = ({ onLogout, navigation }) => {
       {activeTab === 'home' && (
         <View style={styles.topbar}>
           <View style={styles.topbarContent}>
-            <View style={styles.logoContainer}>
+            <TouchableOpacity
+              style={styles.logoContainer}
+              onPress={() => navigation.navigate('About')}
+              activeOpacity={0.7}
+            >
               <Image 
                 source={require('../assets/logo-museu.png')} 
                 style={styles.logoImage}
                 resizeMode="contain"
               />
+            </TouchableOpacity>
+            <View style={styles.topbarRight}>
+              <TouchableOpacity
+                style={styles.addButton}
+                onPress={() => navigation.navigate('AddMuseum')}
+              >
+                <Ionicons name="add" size={24} color="#FFFFFF" />
+              </TouchableOpacity>
+              <View style={{ marginLeft: 12 }}>
+                <LocationSelector
+                  onLocationChange={handleLocationChange}
+                  currentLocation={currentLocation}
+                  iconOnly={true}
+                />
+              </View>
             </View>
-            <LocationSelector
-              onLocationChange={handleLocationChange}
-              currentLocation={currentLocation}
-              iconOnly={true}
-            />
           </View>
         </View>
       )}
@@ -275,7 +359,11 @@ const HomeScreen = ({ onLogout, navigation }) => {
         </View>
       ) : activeTab === 'profile' ? (
         <View style={styles.content}>
-          <ProfileScreen onLogout={onLogout} />
+          <ProfileScreen 
+            onLogout={onLogout} 
+            navigation={navigation}
+            onNavigateToFavorites={() => setActiveTab('favorites')}
+          />
         </View>
       ) : (
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false} bounces={true}>
@@ -360,7 +448,7 @@ const styles = StyleSheet.create({
   topbar: {
     backgroundColor: '#8B6F47',
     paddingTop: 20,
-    paddingBottom: 16,
+    paddingBottom: 5,
     paddingHorizontal: 20,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
@@ -373,13 +461,25 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
   },
+  topbarRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  addButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   logoContainer: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   logoImage: {
-    width: 50,
-    height: 50,
+    width: 90,
+    height: 90,
   },
   content: {
     flex: 1,

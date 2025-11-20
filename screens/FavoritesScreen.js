@@ -1,58 +1,87 @@
 // screens/FavoritesScreen.js
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useCallback } from 'react';
 import { View, Text, StyleSheet, TextInput, TouchableOpacity, FlatList } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-
-// Dados mockados apenas para compor a UI de favoritos
-const MOCK_FAVORITES = [
-  { id: '1', title: 'Museu de Arte Clássica', subtitle: 'Arte', distance: '1.2 km' },
-  { id: '2', title: 'Centro de Ciências Urbanas', subtitle: 'Ciência', distance: '3.4 km' },
-  { id: '3', title: 'Museu da História Local', subtitle: 'História', distance: '5.0 km' },
-];
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import favoritesStorage from '../services/favoritesStorage';
 
 const FavoritesScreen = () => {
+  const navigation = useNavigation();
   const [query, setQuery] = useState('');
   const [filterOpen, setFilterOpen] = useState(false);
   const [activeFilter, setActiveFilter] = useState('Todos');
+  const [favorites, setFavorites] = useState([]);
 
   const filtered = useMemo(() => {
-    const base = MOCK_FAVORITES.filter((f) =>
-      f.title.toLowerCase().includes(query.trim().toLowerCase())
+    const base = favorites.filter((f) =>
+      (f.name || f.title || '').toLowerCase().includes(query.trim().toLowerCase())
     );
     if (activeFilter === 'Todos') return base;
-    return base.filter((f) => f.subtitle === activeFilter);
-  }, [query, activeFilter]);
+    return base.filter((f) => {
+      const subtitle = f.subtitle || f.types?.[0] || '';
+      return subtitle === activeFilter;
+    });
+  }, [query, activeFilter, favorites]);
 
-  const removeFavorite = (id) => {
-    // Para esta entrega de UI, apenas oculta localmente
-    const idx = filtered.findIndex((f) => f.id === id);
-    if (idx === -1) return;
-    // Em um app real, essa ação dispararia persistência no storage/servidor
-    MOCK_FAVORITES.splice(
-      MOCK_FAVORITES.findIndex((f) => f.id === id),
-      1
-    );
-    // Força atualização de estado alterando a query (hack simples para esta UI)
-    setQuery((q) => q + '');
+  const removeFavorite = async (museum) => {
+    try {
+      await favoritesStorage.removeFavorite(museum);
+      const newList = await favoritesStorage.getFavorites();
+      setFavorites(newList);
+    } catch (e) {
+      console.error('Erro ao remover favorito:', e);
+    }
   };
 
   const renderItem = ({ item }) => (
     <View style={styles.card}>
+      {/* Conteúdo central */}
       <View style={styles.cardTextArea}>
-        <Text style={styles.cardTitle} numberOfLines={1}>{item.title}</Text>
-        <Text style={styles.cardSubtitle} numberOfLines={1}>{item.subtitle} · {item.distance}</Text>
+        <Text style={styles.cardTitle} numberOfLines={1}>{item.name || item.title}</Text>
+        <Text style={styles.cardSubtitle} numberOfLines={1}>{item.formatted_address || (item.types ? item.types[0] : '')}</Text>
       </View>
-      <TouchableOpacity style={styles.removeBtn} onPress={() => removeFavorite(item.id)}>
-        <Ionicons name="heart-dislike" size={18} color="#FFFFFF" />
+
+      {/* Botão de coração à direita */}
+      <TouchableOpacity
+        style={styles.heartBtn}
+        onPress={() => removeFavorite(item)}
+      >
+        <Ionicons name="heart" size={20} color="#E74C3C" />
       </TouchableOpacity>
     </View>
+  );
+
+  // Carrega favoritos quando a tela ganha foco
+  useFocusEffect(
+    useCallback(() => {
+      let active = true;
+      const load = async () => {
+        try {
+          const list = await favoritesStorage.getFavorites();
+          if (active) setFavorites(list);
+        } catch (e) {
+          console.error('Erro ao carregar favoritos:', e);
+        }
+      };
+      load();
+      return () => {
+        active = false;
+      };
+    }, [])
   );
 
   return (
     
     <View style={styles.container}>
-      <Text style={styles.title}>Favoritos</Text>
-      
+      <View style={styles.header}>
+        <Text style={styles.title}>Favoritos</Text>
+        <TouchableOpacity
+          style={styles.addButton}
+          onPress={() => navigation.navigate('AddMuseum')}
+        >
+          <Ionicons name="add-circle" size={28} color="#8B6F47" />
+        </TouchableOpacity>
+      </View>
 
       {/* Barra de pesquisa */}
       <TextInput
@@ -110,13 +139,21 @@ const styles = StyleSheet.create({
     paddingTop: 20,
     paddingHorizontal: 20,
   },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 16,
+    marginBottom: 12,
+  },
   title: {
     fontSize: 20,
     fontWeight: '700',
     color: '#8B6F47',
-    marginTop: 16,
-    marginBottom: 12,
     fontFamily: 'PlayfairDisplay-Bold',
+  },
+  addButton: {
+    padding: 4,
   },
   search: {
     height: 48,
@@ -193,7 +230,6 @@ const styles = StyleSheet.create({
   },
   cardTextArea: {
     flex: 1,
-    paddingRight: 12,
   },
   cardTitle: {
     fontSize: 16,
@@ -207,13 +243,14 @@ const styles = StyleSheet.create({
     color: '#666',
     fontFamily: 'Montserrat-Regular',
   },
-  removeBtn: {
-    width: 32,
-    height: 32,
+  heartBtn: {
+    width: 40,
+    height: 40,
     borderRadius: 8,
-    backgroundColor: '#A8402E',
+    backgroundColor: '#F5F0E8',
     alignItems: 'center',
     justifyContent: 'center',
+    marginLeft: 12,
   },
 });
 

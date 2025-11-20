@@ -2,15 +2,15 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, Image, ScrollView, Linking, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { MaterialIcons, Ionicons } from '@expo/vector-icons';
 import { fonts } from '../utils/fonts';
+import { getPlacePhotoUrl } from '../services/googlePlaces';
+import favoritesStorage from '../services/favoritesStorage';
 
 const MuseumDetailsScreen = ({ route, navigation }) => {
   const { museum } = route.params;
   const [wiki, setWiki] = useState(null);
   const [loadingWiki, setLoadingWiki] = useState(false);
+  const [isFavorite, setIsFavorite] = useState(false);
 
-  const getPhotoUrl = (photoReference) => {
-    return `https://maps.googleapis.com/maps/api/place/photo?maxwidth=800&photo_reference=${photoReference}&key=AIzaSyDtPU6QBFbi6tPRq6mcFHURyNDGcsQ-Yuc`;
-  };
 
   useEffect(() => {
     const fetchWiki = async () => {
@@ -44,6 +44,16 @@ const MuseumDetailsScreen = ({ route, navigation }) => {
       setLoadingWiki(false);
     };
     fetchWiki();
+    // checar se já é favorito
+    const checkFav = async () => {
+      try {
+        const fav = await favoritesStorage.isFavorite(museum);
+        setIsFavorite(!!fav);
+      } catch (e) {
+        setIsFavorite(false);
+      }
+    };
+    checkFav();
   }, [museum.name, museum.title]);
 
 
@@ -64,13 +74,19 @@ const MuseumDetailsScreen = ({ route, navigation }) => {
         bounces={true}
         contentContainerStyle={styles.scrollContent}
       >
-        {museum.photos && museum.photos[0] && (
-          <Image 
-            source={{ uri: getPhotoUrl(museum.photos[0].photo_reference) }}
+        {(museum.photos && museum.photos[0] && museum.photos[0].photo_reference ? (
+          <Image
+            source={{ uri: getPlacePhotoUrl(museum.photos[0].photo_reference, 800) }}
             style={styles.image}
             resizeMode="cover"
           />
-        )}
+        ) : museum.image ? (
+          <Image
+            source={museum.image}
+            style={styles.image}
+            resizeMode="cover"
+          />
+        ) : null)}
         
         <View style={styles.content}>
           <Text style={styles.title}>{museum.name || museum.title}</Text>
@@ -107,6 +123,27 @@ const MuseumDetailsScreen = ({ route, navigation }) => {
               ]} />
             </View>
           )}
+
+          {/* Botão de Favoritar */}
+          <TouchableOpacity
+            style={styles.favoriteButton}
+            onPress={async () => {
+              try {
+                if (isFavorite) {
+                  await favoritesStorage.removeFavorite(museum);
+                  setIsFavorite(false);
+                } else {
+                  await favoritesStorage.addFavorite(museum);
+                  setIsFavorite(true);
+                }
+              } catch (e) {
+                console.error('Erro ao alternar favorito:', e);
+              }
+            }}
+          >
+            <MaterialIcons name={isFavorite ? 'favorite' : 'favorite-border'} size={24} color="#A8402E" style={styles.favoriteIcon} />
+            <Text style={styles.favoriteButtonText}>{isFavorite ? 'Remover dos Favoritos' : 'Adicionar aos Favoritos'}</Text>
+          </TouchableOpacity>
 
           {/* Types */}
           {museum.types && museum.types.length > 0 && (
@@ -286,6 +323,31 @@ const styles = StyleSheet.create({
     color: '#007AFF',
     fontSize: 15,
     marginTop: 8,
+    fontFamily: fonts.montserratSemiBold,
+  },
+  favoriteButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-start',
+    marginTop: 16,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#EDE3D6',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  favoriteIcon: {
+    marginRight: 10,
+  },
+  favoriteButtonText: {
+    color: '#8B6F47',
+    fontSize: 16,
     fontFamily: fonts.montserratSemiBold,
   },
 });
