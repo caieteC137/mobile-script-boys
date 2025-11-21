@@ -12,6 +12,9 @@ import MuseumsCategoryScreen from './screens/MuseumsCategoryScreen';
 import AddMuseumScreen from './screens/AddMuseumScreen';
 import AboutScreen from './screens/AboutScreen';
 import { getCurrentUser } from './services/userStorage';
+import { popularBancoDados } from './test_add';
+import { debugDatabase } from './database/iniciarDatabase';
+
 
 const Stack = createNativeStackNavigator();
 
@@ -22,6 +25,8 @@ export default function App() {
 
   useEffect(() => {
     checkAuthStatus();
+    popularBancoDados();
+    debugDatabase();
   }, []);
 
   const checkAuthStatus = async () => {

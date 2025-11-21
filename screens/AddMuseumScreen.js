@@ -9,85 +9,85 @@ import {
   Platform,
   Alert,
   TouchableOpacity,
-  ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import InputField from '../components/InputField';
+import InputField from '../components/InputField';  
 import ButtonPrimary from '../components/ButtonPrimary';
-import { addCustomMuseum } from '../services/customMuseumsStorage';
-import { fetchMuseumDataFromWikipedia } from '../services/wikipediaService';
+import { addMuseu } from '../database/iniciarDatabase';
 import { fonts } from '../utils/fonts';
 
 const AddMuseumScreen = ({ navigation }) => {
-  const [wikipediaUrl, setWikipediaUrl] = useState('');
-  const [error, setError] = useState('');
+  const [nome, setNome] = useState('');
+  const [localizacao, setLocalizacao] = useState('');
+  const [rating, setRating] = useState('');
+  const [horarioFuncionamento, setHorarioFuncionamento] = useState('');
+  const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
-  const [loadingData, setLoadingData] = useState(false);
 
-  const isValidWikipediaUrl = (url) => {
-    if (!url.trim()) return false;
-    const pattern = /wikipedia\.org\/wiki\//i;
-    return pattern.test(url);
+  const validateFields = () => {
+    const newErrors = {};
+
+    if (!nome.trim()) {
+      newErrors.nome = 'Nome do museu é obrigatório';
+    }
+
+    if (!localizacao.trim()) {
+      newErrors.localizacao = 'Localização é obrigatória';
+    }
+
+    if (rating && (isNaN(rating) || rating < 0 || rating > 5)) {
+      newErrors.rating = 'Rating deve ser entre 0 e 5';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
-  const handleFetchData = async () => {
-    if (!wikipediaUrl.trim()) {
-      setError('Por favor, insira a URL do Wikipedia');
+  const handleSubmit = async () => {
+    if (!validateFields()) {
       return;
-    }
-
-    if (!isValidWikipediaUrl(wikipediaUrl)) {
-      setError('URL inválida. Use uma URL do Wikipedia (ex: https://pt.wikipedia.org/wiki/Nome_do_Museu)');
-      return;
-    }
-
-    setError('');
-    setLoadingData(true);
-
-    try {
-      // Busca os dados do Wikipedia
-      const museumData = await fetchMuseumDataFromWikipedia(wikipediaUrl);
-      
-      // Se chegou aqui, os dados foram encontrados
-      // Agora salva o museu
-      await handleSubmit(museumData);
-    } catch (error) {
-      console.error('Erro ao buscar dados:', error);
-      setError(error.message || 'Não foi possível buscar os dados do Wikipedia. Verifique se a URL está correta.');
-      setLoadingData(false);
-    }
-  };
-
-  const handleSubmit = async (museumData = null) => {
-    if (!museumData) {
-      // Se não foi passado, tenta buscar novamente
-      return handleFetchData();
     }
 
     setLoading(true);
 
     try {
-      await addCustomMuseum(museumData);
+      const museuData = {
+        nome: nome.trim(),
+        localizacao: localizacao.trim(),
+        rating: rating ? parseFloat(rating) : null,
+        horarioFuncionamento: horarioFuncionamento.trim() || null,
+      };
 
-      Alert.alert(
-        'Sucesso!',
-        'Museu adicionado com sucesso!',
-        [
-          {
-            text: 'OK',
-            onPress: () => navigation.goBack(),
-          },
-        ]
-      );
+      const result = addMuseu(museuData);
+
+      if (result.success) {
+        Alert.alert(
+          'Sucesso!',
+          'Museu adicionado com sucesso!',
+          [
+            {
+              text: 'OK',
+              onPress: () => navigation.goBack(),
+            },
+          ]
+        );
+      } else {
+        throw new Error(result.error || 'Erro ao adicionar museu');
+      }
     } catch (error) {
       console.error('Erro ao adicionar museu:', error);
       Alert.alert(
-        'Erro', 
-        error.message || 'Não foi possível adicionar o museu. Verifique sua conexão e tente novamente.'
+        'Erro',
+        'Não foi possível adicionar o museu. Tente novamente.'
       );
     } finally {
       setLoading(false);
-      setLoadingData(false);
+    }
+  };
+
+  const clearError = (field) => {
+    if (errors[field]) {
+      setErrors({ ...errors, [field]: '' });
     }
   };
 
@@ -118,44 +118,61 @@ const AddMuseumScreen = ({ navigation }) => {
           <View style={styles.infoBox}>
             <Ionicons name="information-circle" size={24} color="#8B6F47" />
             <Text style={styles.infoText}>
-              Cole a URL do artigo do Wikipedia do museu que deseja adicionar. 
-              O app buscará automaticamente todas as informações disponíveis.
+              Preencha os dados do museu que deseja adicionar à sua coleção.
             </Text>
           </View>
 
           <InputField
-            label="URL do Wikipedia *"
-            placeholder="https://pt.wikipedia.org/wiki/Nome_do_Museu"
-            value={wikipediaUrl}
+            label="Nome do Museu *"
+            placeholder="Ex: Museu de Arte de São Paulo"
+            value={nome}
             onChangeText={(text) => {
-              setWikipediaUrl(text);
-              setError('');
+              setNome(text);
+              clearError('nome');
             }}
-            error={error}
-            keyboardType="url"
-            autoCapitalize="none"
+            error={errors.nome}
           />
 
-          {loadingData && (
-            <View style={styles.loadingContainer}>
-              <ActivityIndicator size="large" color="#8B6F47" />
-              <Text style={styles.loadingText}>Buscando dados do Wikipedia...</Text>
-            </View>
-          )}
+          <InputField
+            label="Localização *"
+            placeholder="Ex: São Paulo, SP"
+            value={localizacao}
+            onChangeText={(text) => {
+              setLocalizacao(text);
+              clearError('localizacao');
+            }}
+            error={errors.localizacao}
+          />
 
-          <View style={styles.exampleContainer}>
-            <Text style={styles.exampleTitle}>Exemplo de URL:</Text>
-            <Text style={styles.exampleText}>
-              https://pt.wikipedia.org/wiki/Museu_de_Arte_de_São_Paulo
-            </Text>
+          <InputField
+            label="Avaliação (0-5)"
+            placeholder="Ex: 4.5"
+            value={rating}
+            onChangeText={(text) => {
+              setRating(text);
+              clearError('rating');
+            }}
+            error={errors.rating}
+            keyboardType="decimal-pad"
+          />
+
+          <InputField
+            label="Horário de Funcionamento"
+            placeholder="Ex: 9h-18h"
+            value={horarioFuncionamento}
+            onChangeText={setHorarioFuncionamento}
+          />
+
+          <View style={styles.requiredNote}>
+            <Text style={styles.requiredText}>* Campos obrigatórios</Text>
           </View>
 
           <View style={styles.buttonContainer}>
             <ButtonPrimary
-              title={loadingData ? "Buscando..." : "Adicionar Museu"}
-              onPress={handleFetchData}
-              loading={loading || loadingData}
-              disabled={loading || loadingData || !wikipediaUrl.trim()}
+              title="Adicionar Museu"
+              onPress={handleSubmit}
+              loading={loading}
+              disabled={loading}
             />
           </View>
         </View>
@@ -221,33 +238,14 @@ const styles = StyleSheet.create({
     lineHeight: 20,
     fontFamily: fonts.montserratRegular,
   },
-  loadingContainer: {
-    alignItems: 'center',
-    paddingVertical: 24,
-  },
-  loadingText: {
-    marginTop: 12,
-    fontSize: 14,
-    color: '#8B6F47',
-    fontFamily: fonts.montserratMedium,
-  },
-  exampleContainer: {
-    backgroundColor: '#F9F6F2',
-    padding: 16,
-    borderRadius: 8,
+  requiredNote: {
     marginTop: 8,
-    marginBottom: 24,
+    marginBottom: 16,
   },
-  exampleTitle: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#8B6F47',
-    marginBottom: 8,
-    fontFamily: fonts.montserratSemiBold,
-  },
-  exampleText: {
-    fontSize: 13,
-    color: '#666',
+  requiredText: {
+    fontSize: 12,
+    color: '#999',
+    fontStyle: 'italic',
     fontFamily: fonts.montserratRegular,
   },
   buttonContainer: {
