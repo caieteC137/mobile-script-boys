@@ -11,7 +11,7 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import InputField from '../components/InputField';
+import InputField from '../components/InputField';  
 import ButtonPrimary from '../components/ButtonPrimary';
 import { addMuseu } from '../database/iniciarDatabase';
 import { fonts } from '../utils/fonts';
