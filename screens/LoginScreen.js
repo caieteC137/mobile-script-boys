@@ -6,7 +6,6 @@ import {
   StyleSheet,
   ScrollView,
   Alert,
-  TouchableOpacity,
   KeyboardAvoidingView,
   Platform,
   Image,
@@ -15,8 +14,8 @@ import InputField from '../components/InputField';
 import ButtonPrimary from '../components/ButtonPrimary';
 import { validateCredentials } from '../services/authStorage';
 
-const LoginScreen = ({ route }) => {
-  const { onLogin } = route.params;
+const LoginScreen = ({ route, navigation }) => {
+  const { onLogin } = route.params || {};
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -85,11 +84,13 @@ const LoginScreen = ({ route }) => {
   };
 
   const handleRegister = () => {
-    Alert.alert(
-      'Cadastro',
-      'Funcionalidade de cadastro será implementada em breve!',
-      [{ text: 'OK', style: 'default' }]
-    );
+    navigation.navigate('Registration', {
+      onRegister: (user) => {
+        if (onLogin) {
+          onLogin(user);
+        }
+      }
+    });
   };
 
   return (
@@ -114,7 +115,7 @@ const LoginScreen = ({ route }) => {
                   resizeMode="contain"
                 />
               </View>
-              <Text style={styles.welcomeTitle}>Bem-vindo ao Museu</Text>
+              <Text style={styles.welcomeTitle}>Bem-vindo ao Museu na Mão</Text>
               <Text style={styles.welcomeSubtitle}>Faça login para continuar</Text>
             </View>
 
@@ -146,14 +147,14 @@ const LoginScreen = ({ route }) => {
               />
             </View>
 
-            {/* Register Link */}
+            {/* Register Button */}
             <View style={styles.registerContainer}>
-              <Text style={styles.registerText}>
-                Novo por aqui?{' '}
-                <TouchableOpacity onPress={handleRegister}>
-                  <Text style={styles.registerLink}>Cadastre-se!</Text>
-                </TouchableOpacity>
-              </Text>
+              <Text style={styles.registerText}>Novo por aqui?</Text>
+              <ButtonPrimary
+                title="Cadastre-se"
+                onPress={handleRegister}
+                variant="outline"
+              />
             </View>
 
             {/* Demo Credentials Info */}
@@ -245,12 +246,7 @@ const styles = StyleSheet.create({
     fontWeight: '400',
     color: '#8B6F47',
     textAlign: 'center',
-  },
-  registerLink: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#4A7C59',
-    textDecorationLine: 'underline',
+    marginBottom: 16,
   },
   demoInfoContainer: {
     backgroundColor: '#F8F8F8',
