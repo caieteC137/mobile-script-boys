@@ -92,33 +92,6 @@ const FavoritesScreen = () => {
         onChangeText={setQuery}
       />
 
-      {/* Filtro simples tipo dropdown */}
-      <View style={styles.filterRow}>
-        <TouchableOpacity style={styles.filterButton} onPress={() => setFilterOpen((v) => !v)}>
-          <Text style={styles.filterText}>Filtro: {activeFilter}</Text>
-          <Ionicons name={filterOpen ? 'chevron-up' : 'chevron-down'} size={16} color="#8B6F47" />
-        </TouchableOpacity>
-
-        {filterOpen && (
-          <View style={styles.filterMenu}>
-            {['Todos', 'Arte', 'História', 'Ciência'].map((opt) => (
-              <TouchableOpacity
-                key={opt}
-                style={[styles.filterOption, activeFilter === opt && styles.filterOptionActive]}
-                onPress={() => {
-                  setActiveFilter(opt);
-                  setFilterOpen(false);
-                }}
-              >
-                <Text style={[styles.filterOptionText, activeFilter === opt && styles.filterOptionTextActive]}>
-                  {opt}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        )}
-      </View>
-
       {/* Lista */}
       <FlatList
         data={filtered}

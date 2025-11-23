@@ -120,14 +120,14 @@ const AboutScreen = ({ navigation }) => {
             </View>
             <View style={styles.techItem}>
               <Ionicons name="globe" size={20} color="#8B6F47" />
-              <Text style={styles.techText}>Wikipedia API</Text>
+              <Text style={styles.techText}>ExpoGO</Text>
             </View>
           </View>
         </View>
 
         {/* Footer */}
         <View style={styles.footer}>
-          <Text style={styles.footerText}>© 2024 Museu Na Mão</Text>
+          <Text style={styles.footerText}>© 2025 Museu Na Mão</Text>
           <Text style={styles.footerText}>Trabalho Acadêmico - Disciplina MOBILE</Text>
         </View>
       </ScrollView>
