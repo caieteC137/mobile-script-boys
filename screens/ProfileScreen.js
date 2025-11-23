@@ -149,14 +149,6 @@ const ProfileScreen = ({ onLogout, navigation, onNavigateToFavorites }) => {
           <Ionicons name="chevron-forward" size={20} color="#8B6F47" />
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.menuItem}>
-          <View style={styles.menuItemLeft}>
-            <Ionicons name="location-outline" size={24} color="#8B6F47" />
-            <Text style={styles.menuItemText}>Minhas Localizações</Text>
-          </View>
-          <Ionicons name="chevron-forward" size={20} color="#8B6F47" />
-        </TouchableOpacity>
-
         <TouchableOpacity 
           style={styles.menuItem}
           onPress={() => {
@@ -168,30 +160,6 @@ const ProfileScreen = ({ onLogout, navigation, onNavigateToFavorites }) => {
           <View style={styles.menuItemLeft}>
             <Ionicons name="heart-outline" size={24} color="#8B6F47" />
             <Text style={styles.menuItemText}>Favoritos</Text>
-          </View>
-          <Ionicons name="chevron-forward" size={20} color="#8B6F47" />
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.menuItem}>
-          <View style={styles.menuItemLeft}>
-            <Ionicons name="time-outline" size={24} color="#8B6F47" />
-            <Text style={styles.menuItemText}>Histórico de Visitas</Text>
-          </View>
-          <Ionicons name="chevron-forward" size={20} color="#8B6F47" />
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.menuItem}>
-          <View style={styles.menuItemLeft}>
-            <Ionicons name="settings-outline" size={24} color="#8B6F47" />
-            <Text style={styles.menuItemText}>Configurações</Text>
-          </View>
-          <Ionicons name="chevron-forward" size={20} color="#8B6F47" />
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.menuItem}>
-          <View style={styles.menuItemLeft}>
-            <Ionicons name="help-circle-outline" size={24} color="#8B6F47" />
-            <Text style={styles.menuItemText}>Ajuda e Suporte</Text>
           </View>
           <Ionicons name="chevron-forward" size={20} color="#8B6F47" />
         </TouchableOpacity>
