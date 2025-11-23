@@ -56,6 +56,41 @@ const MuseumDetailsScreen = ({ route, navigation }) => {
     checkFav();
   }, [museum.name, museum.title]);
 
+  const openGoogleMaps = () => {
+    try {
+      let mapsUrl = '';
+      
+      // Prioridade 1: Coordenadas (sempre funciona no app do Google Maps)
+      if (museum.latitude && museum.longitude) {
+        mapsUrl = `https://www.google.com/maps/search/?api=1&query=${museum.latitude},${museum.longitude}`;
+      }
+      // Prioridade 2: Nome + endereço (busca textual - mais confiável que place_id)
+      else if (museum.name || museum.title) {
+        const query = encodeURIComponent(
+          `${museum.name || museum.title}${museum.formatted_address ? ` ${museum.formatted_address}` : ''}`
+        );
+        mapsUrl = `https://www.google.com/maps/search/?api=1&query=${query}`;
+      }
+      // Prioridade 3: Place ID (pode não funcionar bem no app mobile)
+      else if (museum.place_id) {
+        // Tenta abrir com place_id, mas se não funcionar, o usuário pode usar nome+endereço
+        mapsUrl = `https://maps.google.com/maps?q=place_id:${museum.place_id}`;
+      }
+      // Fallback: apenas endereço
+      else if (museum.formatted_address) {
+        const query = encodeURIComponent(museum.formatted_address);
+        mapsUrl = `https://www.google.com/maps/search/?api=1&query=${query}`;
+      }
+
+      if (mapsUrl) {
+        Linking.openURL(mapsUrl).catch(err => {
+          console.error('Erro ao abrir Google Maps:', err);
+        });
+      }
+    } catch (error) {
+      console.error('Erro ao abrir Google Maps:', error);
+    }
+  };
 
   return (
     <View style={styles.container}>
@@ -144,6 +179,17 @@ const MuseumDetailsScreen = ({ route, navigation }) => {
             <MaterialIcons name={isFavorite ? 'favorite' : 'favorite-border'} size={24} color="#A8402E" style={styles.favoriteIcon} />
             <Text style={styles.favoriteButtonText}>{isFavorite ? 'Remover dos Favoritos' : 'Adicionar aos Favoritos'}</Text>
           </TouchableOpacity>
+
+          {/* Botão do Google Maps */}
+          {museum.place_id || (museum.latitude && museum.longitude) || museum.formatted_address || museum.name || museum.title ? (
+            <TouchableOpacity
+              style={styles.mapsButton}
+              onPress={openGoogleMaps}
+            >
+              <MaterialIcons name="map" size={24} color="#4285F4" style={styles.mapsIcon} />
+              <Text style={styles.mapsButtonText}>Ver no Google Maps</Text>
+            </TouchableOpacity>
+          ) : null}
 
           {/* Types */}
           {museum.types && museum.types.length > 0 && (
@@ -347,6 +393,31 @@ const styles = StyleSheet.create({
   },
   favoriteButtonText: {
     color: '#8B6F47',
+    fontSize: 16,
+    fontFamily: fonts.montserratSemiBold,
+  },
+  mapsButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-start',
+    marginTop: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#EDE3D6',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  mapsIcon: {
+    marginRight: 10,
+  },
+  mapsButtonText: {
+    color: '#4285F4',
     fontSize: 16,
     fontFamily: fonts.montserratSemiBold,
   },
