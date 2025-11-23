@@ -1,4 +1,4 @@
-const WIKI_API_URL = "https://en.wikipedia.org/api/rest_v1/page/summary/Museu de Arte de São Paulo Assis Chateaubriand";
+const WIKI_API_URL = "https://en.wikipedia.org/api/rest_v1/page/summary/Louvre";
 
 async function getWikipediaExtract() {
   try {

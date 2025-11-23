@@ -1,5 +1,5 @@
 // screens/ProfileScreen.js
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import {
   View,
   Text,
@@ -7,136 +7,22 @@ import {
   ScrollView,
   TouchableOpacity,
   Image,
-  ActivityIndicator,
-  Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import * as ImagePicker from 'expo-image-picker';
 import { fonts } from '../utils/fonts';
-import { 
-  getCurrentUser, 
-  clearCurrentUser, 
-  updateUserProfileImage 
-} from '../services/userStorage';
 
-const ProfileScreen = ({ onLogout, navigation, onNavigateToFavorites }) => {
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [profileImage, setProfileImage] = useState(null);
-
-  useEffect(() => {
-    (async () => {
-      const { status: mediaStatus } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-      if (mediaStatus !== 'granted') {
-        Alert.alert("Permissão necessária", "O app precisa de acesso à galeria.");
-      }
-
-      const { status: cameraStatus } = await ImagePicker.requestCameraPermissionsAsync();
-      if (cameraStatus !== 'granted') {
-        Alert.alert("Permissão necessária", "O app precisa da câmera para tirar fotos.");
-      }
-    })();
-
-    loadUserData();
-  }, []);
-
-  const loadUserData = async () => {
-    try {
-      const currentUser = await getCurrentUser();
-      setUser(currentUser);
-      // Inicializa a imagem de perfil a partir do usuário armazenado (se houver)
-      setProfileImage(currentUser?.profileImage || null);
-    } catch (error) {
-      console.error('Error loading user data:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleLogout = async () => {
-    Alert.alert(
-      'Confirmar Saída',
-      'Tem certeza que deseja sair?',
-      [
-        {
-          text: 'Cancelar',
-          style: 'cancel',
-        },
-        {
-          text: 'Sair',
-          style: 'destructive',
-          onPress: async () => {
-            await clearCurrentUser();
-            if (onLogout) {
-              onLogout();
-            }
-          },
-        },
-      ]
-    );
-  };
-
-  const takePicture = async () => {
-    let result = await ImagePicker.launchCameraAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 1,
-    });
-
-    if (!result.canceled) {
-      const uri = result.assets[0].uri;
-      setProfileImage(uri);
-      await updateUserProfileImage(user.id, uri);
-      Alert.alert("Foto atualizada com sucesso");
-    }
-  };
-
-
-  const pickImage = async () => {
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 1,
-    });
-
-    if (!result.canceled) {
-      const uri = result.assets[0].uri;
-      setProfileImage(uri);
-      await updateUserProfileImage(user.id, uri);
-    }
-  };
-
-  if (loading) {
-    return (
-      <View style={[styles.container, styles.loadingContainer]}>
-        <ActivityIndicator size="large" color="#8B6F47" />
-      </View>
-    );
-  }
-
+const ProfileScreen = ({ onLogout }) => {
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
       {/* Header Section */}
       <View style={styles.headerSection}>
         <View style={styles.avatarContainer}>
-          {/* FOTO DE PERFIL */}
-          {profileImage ? (
-            <Image source={{ uri: profileImage }} style={styles.avatarImage} />
-          ) : (
-            <View style={styles.avatar}>
-              <Ionicons name="person" size={48} color="#8B6F47" />
-            </View>
-          )}
-
-          {/* Botão para trocar imagem */}
-          <TouchableOpacity style={styles.editPhotoButton} onPress={pickImage}>
-            <Ionicons name="camera" size={20} color="#FFFFFF" />
-          </TouchableOpacity>
+          <View style={styles.avatar}>
+            <Ionicons name="person" size={48} color="#8B6F47" />
+          </View>
         </View>
-        <Text style={styles.userName}>{user?.name || 'Usuário'}</Text>
-        <Text style={styles.userEmail}>{user?.email || 'usuario@exemplo.com'}</Text>
+        <Text style={styles.userName}>Usuário</Text>
+        <Text style={styles.userEmail}>usuario@exemplo.com</Text>
       </View>
 
       {/* Menu Items */}
@@ -157,14 +43,7 @@ const ProfileScreen = ({ onLogout, navigation, onNavigateToFavorites }) => {
           <Ionicons name="chevron-forward" size={20} color="#8B6F47" />
         </TouchableOpacity>
 
-        <TouchableOpacity 
-          style={styles.menuItem}
-          onPress={() => {
-            if (onNavigateToFavorites) {
-              onNavigateToFavorites();
-            }
-          }}
-        >
+        <TouchableOpacity style={styles.menuItem}>
           <View style={styles.menuItemLeft}>
             <Ionicons name="heart-outline" size={24} color="#8B6F47" />
             <Text style={styles.menuItemText}>Favoritos</Text>
@@ -196,10 +75,7 @@ const ProfileScreen = ({ onLogout, navigation, onNavigateToFavorites }) => {
           <Ionicons name="chevron-forward" size={20} color="#8B6F47" />
         </TouchableOpacity>
 
-        <TouchableOpacity 
-          style={styles.menuItem}
-          onPress={() => navigation?.navigate('About')}
-        >
+        <TouchableOpacity style={styles.menuItem}>
           <View style={styles.menuItemLeft}>
             <Ionicons name="information-circle-outline" size={24} color="#8B6F47" />
             <Text style={styles.menuItemText}>Sobre o App</Text>
@@ -210,7 +86,7 @@ const ProfileScreen = ({ onLogout, navigation, onNavigateToFavorites }) => {
 
       {/* Logout Button */}
       <View style={styles.logoutSection}>
-        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+        <TouchableOpacity style={styles.logoutButton} onPress={onLogout}>
           <Ionicons name="log-out-outline" size={24} color="#FFFFFF" />
           <Text style={styles.logoutButtonText}>Sair</Text>
         </TouchableOpacity>
@@ -258,21 +134,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderWidth: 3,
     borderColor: '#8B6F47',
-  },
-  avatarImage: {
-    width: 110,
-    height: 110,
-    borderRadius: 55,
-    borderWidth: 3,
-    borderColor: '#8B6F47',
-  },
-  editPhotoButton: {
-    position: 'absolute',
-    bottom: 0,
-    right: 0,
-    backgroundColor: '#8B6F47',
-    padding: 8,
-    borderRadius: 20,
   },
   userName: {
     fontSize: 24,
@@ -359,10 +220,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#666',
     fontFamily: fonts.montserratRegular,
-  },
-  loadingContainer: {
-    justifyContent: 'center',
-    alignItems: 'center',
   },
 });
 

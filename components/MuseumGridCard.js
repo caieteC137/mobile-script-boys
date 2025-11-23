@@ -9,9 +9,7 @@ const MuseumGridCard = ({
   image, 
   onPress,
   rating = 4.5,
-  openNow = false,
-  isFavorite = false,
-  onFavoritePress = () => {},
+  openNow = false
 }) => {
   return (
     <TouchableOpacity 
@@ -24,20 +22,6 @@ const MuseumGridCard = ({
           style={styles.image}
           resizeMode="cover"
         />
-        {/* Botão de coração no canto superior esquerdo */}
-        <TouchableOpacity
-          style={styles.heartButton}
-          onPress={(e) => {
-            e.stopPropagation();
-            onFavoritePress();
-          }}
-        >
-          <Ionicons 
-            name={isFavorite ? 'heart' : 'heart-outline'} 
-            size={24} 
-            color={isFavorite ? '#E74C3C' : '#FFFFFF'} 
-          />
-        </TouchableOpacity>
         <View style={styles.ratingContainer}>
           <Ionicons name="star" size={14} color="#FFD700" />
           <Text style={styles.ratingText}>{rating}</Text>
@@ -76,18 +60,6 @@ const styles = StyleSheet.create({
   image: {
     width: '100%',
     height: '100%',
-  },
-  heartButton: {
-    position: 'absolute',
-    top: 12,
-    left: 12,
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    zIndex: 2,
   },
   ratingContainer: {
     position: 'absolute',

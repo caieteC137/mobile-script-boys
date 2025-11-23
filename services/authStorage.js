@@ -1,28 +1,22 @@
 // services/authStorage.js
-// Authentication storage service using userStorage
+// Mock authentication storage for temporary credential validation
 
-import { validateUserCredentials, setCurrentUser } from './userStorage';
+const mockCredentials = {
+  email: 'admin@museum.com',
+  password: 'museum123'
+};
 
-export const validateCredentials = async (email, password) => {
-  try {
+export const validateCredentials = (email, password) => {
+  return new Promise((resolve) => {
     // Simulate API call delay
-    await new Promise(resolve => setTimeout(resolve, 500));
-    
-    const result = await validateUserCredentials(email, password);
-    
-    if (result.success && result.user) {
-      // Set current user after successful login
-      await setCurrentUser(result.user);
-    }
-    
-    return result;
-  } catch (error) {
-    console.error('Error validating credentials:', error);
-    return {
-      success: false,
-      message: 'Erro ao validar credenciais. Tente novamente.'
-    };
-  }
+    setTimeout(() => {
+      const isValid = email === mockCredentials.email && password === mockCredentials.password;
+      resolve({
+        success: isValid,
+        message: isValid ? 'Login realizado com sucesso!' : 'E-mail ou senha inválidos'
+      });
+    }, 1000);
+  });
 };
 
 export default {

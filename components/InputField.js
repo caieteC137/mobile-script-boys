@@ -9,8 +9,7 @@ const InputField = ({
   onChangeText, 
   secureTextEntry = false, 
   error = null,
-  keyboardType = 'default',
-  autoCapitalize = 'none'
+  keyboardType = 'default'
 }) => {
   const [isFocused, setIsFocused] = useState(false);
 
@@ -31,7 +30,7 @@ const InputField = ({
         onBlur={() => setIsFocused(false)}
         secureTextEntry={secureTextEntry}
         keyboardType={keyboardType}
-        autoCapitalize={autoCapitalize}
+        autoCapitalize="none"
         autoCorrect={false}
       />
       {error && <Text style={styles.errorText}>{error}</Text>}

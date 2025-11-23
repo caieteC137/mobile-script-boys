@@ -7,7 +7,7 @@ const ButtonPrimary = ({
   onPress, 
   disabled = false, 
   loading = false,
-  variant = 'primary' // primary, success, error, outline
+  variant = 'primary' // primary, success, error
 }) => {
   const getButtonStyle = () => {
     switch (variant) {
@@ -15,8 +15,6 @@ const ButtonPrimary = ({
         return [styles.button, styles.successButton, disabled && styles.disabledButton];
       case 'error':
         return [styles.button, styles.errorButton, disabled && styles.disabledButton];
-      case 'outline':
-        return [styles.button, styles.outlineButton, disabled && styles.disabledButton];
       default:
         return [styles.button, styles.primaryButton, disabled && styles.disabledButton];
     }
@@ -28,8 +26,6 @@ const ButtonPrimary = ({
         return [styles.buttonText, styles.successButtonText];
       case 'error':
         return [styles.buttonText, styles.errorButtonText];
-      case 'outline':
-        return [styles.buttonText, styles.outlineButtonText];
       default:
         return [styles.buttonText, styles.primaryButtonText];
     }
@@ -72,11 +68,6 @@ const styles = StyleSheet.create({
   errorButton: {
     backgroundColor: '#A8402E',
   },
-  outlineButton: {
-    backgroundColor: 'transparent',
-    borderWidth: 2,
-    borderColor: '#8B6F47',
-  },
   disabledButton: {
     backgroundColor: '#D0D0D0',
     shadowOpacity: 0,
@@ -94,9 +85,6 @@ const styles = StyleSheet.create({
   },
   errorButtonText: {
     color: '#FFFFFF',
-  },
-  outlineButtonText: {
-    color: '#8B6F47',
   },
 });
 

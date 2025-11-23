@@ -1,7 +1,6 @@
 // components/MuseumCard.js
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
 
 const MuseumCard = ({ 
   title, 
@@ -9,9 +8,7 @@ const MuseumCard = ({
   image, 
   onPress,
   rating = 4.5,
-  openNow = false,
-  isFavorite = false,
-  onFavoritePress = () => {},
+  openNow = false
 }) => {
   return (
     <TouchableOpacity 
@@ -24,20 +21,6 @@ const MuseumCard = ({
           style={styles.image}
           resizeMode="cover"
         />
-        {/* Botão de coração no canto superior esquerdo */}
-        <TouchableOpacity
-          style={styles.heartButton}
-          onPress={(e) => {
-            e.stopPropagation();
-            onFavoritePress();
-          }}
-        >
-          <Ionicons 
-            name={isFavorite ? 'heart' : 'heart-outline'} 
-            size={24} 
-            color={isFavorite ? '#E74C3C' : '#FFFFFF'} 
-          />
-        </TouchableOpacity>
         <View style={styles.ratingContainer}>
           <Text style={styles.ratingText}>⭐ {rating}</Text>
         </View>
@@ -78,18 +61,6 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 0,
     left: 0,
-  },
-  heartButton: {
-    position: 'absolute',
-    top: 12,
-    left: 12,
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    zIndex: 2,
   },
   ratingContainer: {
     position: 'absolute',
