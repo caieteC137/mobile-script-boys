@@ -11,7 +11,9 @@ import {
   Image,
   ActivityIndicator,
 } from 'react-native';
+import { WebView } from 'react-native-webview';
 import { Ionicons } from '@expo/vector-icons';
+import * as Location from 'expo-location';
 import MuseumCard from '../components/MuseumCard';
 import FavoritesScreen from './FavoritesScreen';
 import ExploreScreen from './ExploreScreen';
@@ -36,15 +38,36 @@ const HomeScreen = ({ route, navigation }) => {
   useEffect(() => {
     const loadLocationAndMuseums = async () => {
       try {
-        // Por padrão, não carrega localização salva - usa coordenadas padrão
-        const defaultLocation = { 
-          latitude: -23.55052, 
-          longitude: -46.633308,
-          city: null,
-          state: null
-        };
-        setCurrentLocation(defaultLocation);
-        await fetchMuseumsForLocation(defaultLocation);
+        // Solicitar permissão de localização
+        let { status } = await Location.requestForegroundPermissionsAsync();
+        
+        if (status !== 'granted') {
+          console.log('Permissão de localização negada');
+          // Se não tiver permissão, usa localização padrão
+          const defaultLocation = { 
+            latitude: -23.55052, 
+            longitude: -46.633308,
+            city: null,
+            state: null
+          };
+          setCurrentLocation(defaultLocation);
+          await fetchMuseumsForLocation(defaultLocation);
+        } else {
+          // Obter localização atual do dispositivo
+          let location = await Location.getCurrentPositionAsync({
+            accuracy: Location.Accuracy.Balanced,
+          });
+          
+          const userLocation = {
+            latitude: location.coords.latitude,
+            longitude: location.coords.longitude,
+            city: null,
+            state: null
+          };
+          
+          setCurrentLocation(userLocation);
+          await fetchMuseumsForLocation(userLocation);
+        }
         
         // Carregar favoritos
         const favs = await favoritesStorage.getFavorites();
@@ -52,6 +75,7 @@ const HomeScreen = ({ route, navigation }) => {
         setFavoritesSet(favSet);
       } catch (e) {
         console.error('Erro ao carregar localização:', e);
+        // Fallback para localização padrão em caso de erro
         const defaultLocation = { 
           latitude: -23.55052, 
           longitude: -46.633308,
@@ -104,6 +128,101 @@ const HomeScreen = ({ route, navigation }) => {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const generateMapHTML = () => {
+    if (!currentLocation) return '';
+    
+    const apiKey = 'AIzaSyB4Wzh4ko66GWkC6I5eJ1-VtjqvIoTTPrk';
+    const museumsWithLocation = museums.filter(m => m.latitude && m.longitude);
+    
+    // Criar marcadores para os museus com informações
+    const markers = museumsWithLocation.map((museum, index) => {
+      const name = (museum.name || museum.title || 'Museu')
+        .replace(/\\/g, '\\\\')
+        .replace(/'/g, "\\'")
+        .replace(/"/g, '\\"')
+        .replace(/\n/g, ' ');
+      const lat = museum.latitude;
+      const lng = museum.longitude;
+      const rating = museum.rating ? museum.rating.toFixed(1) : 'N/A';
+      const address = (museum.formatted_address || museum.subtitle || '')
+        .replace(/\\/g, '\\\\')
+        .replace(/'/g, "\\'")
+        .replace(/"/g, '\\"')
+        .replace(/\n/g, ' ');
+      
+      return `
+        (function() {
+          const marker${index} = new google.maps.Marker({
+            position: { lat: ${lat}, lng: ${lng} },
+            map: map,
+            title: '${name}',
+            icon: {
+              url: 'http://maps.google.com/mapfiles/ms/icons/red-dot.png',
+              scaledSize: new google.maps.Size(40, 40)
+            },
+            animation: google.maps.Animation.DROP
+          });
+          
+          const infoWindow${index} = new google.maps.InfoWindow({
+            content: '<div style="padding: 8px; min-width: 200px;"><h3 style="margin: 0 0 8px 0; font-size: 16px; color: #8B6F47;">${name}</h3><p style="margin: 4px 0; font-size: 12px; color: #666;">⭐ ${rating}</p><p style="margin: 4px 0; font-size: 12px; color: #666;">${address}</p></div>'
+          });
+          
+          marker${index}.addListener('click', function() {
+            infoWindow${index}.open(map, marker${index});
+          });
+        })();
+      `;
+    }).join('');
+
+    return `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+          <style>
+            * { margin: 0; padding: 0; box-sizing: border-box; }
+            html, body { width: 100%; height: 100%; overflow: hidden; }
+            #map { width: 100%; height: 100%; }
+          </style>
+        </head>
+        <body>
+          <div id="map"></div>
+          <script>
+            function initMap() {
+              const center = { lat: ${currentLocation.latitude}, lng: ${currentLocation.longitude} };
+              const map = new google.maps.Map(document.getElementById('map'), {
+                zoom: 13,
+                center: center,
+                mapTypeControl: true,
+                streetViewControl: true,
+                fullscreenControl: true
+              });
+
+              // Marcador da localização do usuário
+              new google.maps.Marker({
+                position: center,
+                map: map,
+                title: 'Sua localização',
+                icon: {
+                  url: 'http://maps.google.com/mapfiles/ms/icons/blue-dot.png',
+                  scaledSize: new google.maps.Size(40, 40)
+                },
+                animation: google.maps.Animation.DROP,
+                zIndex: 1000
+              });
+
+              // Marcadores dos museus
+              ${markers}
+            }
+          </script>
+          <script async defer
+            src="https://maps.googleapis.com/maps/api/js?key=${apiKey}&callback=initMap">
+          </script>
+        </body>
+      </html>
+    `;
   };
 
   const handleLocationChange = async (newLocation) => {
@@ -431,6 +550,44 @@ const HomeScreen = ({ route, navigation }) => {
             </View>
           </View>
         </View>
+
+        {/* Google Maps */}
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <View style={styles.sectionHeaderLeft}>
+              <Ionicons name="map" size={20} color="#8B6F47" style={{ marginRight: 8 }} />
+              <Text style={styles.sectionTitle}>Mapa</Text>
+            </View>
+          </View>
+          <View style={styles.mapContainer}>
+            {currentLocation && museums.length > 0 ? (
+              <WebView
+                source={{
+                  html: generateMapHTML()
+                }}
+                style={styles.map}
+                javaScriptEnabled={true}
+                domStorageEnabled={true}
+                startInLoadingState={true}
+                scalesPageToFit={true}
+                onError={(syntheticEvent) => {
+                  const { nativeEvent } = syntheticEvent;
+                  console.warn('WebView error: ', nativeEvent);
+                }}
+              />
+            ) : currentLocation ? (
+              <View style={styles.mapPlaceholder}>
+                <ActivityIndicator size="large" color="#8B6F47" />
+                <Text style={styles.mapPlaceholderText}>Carregando museus no mapa...</Text>
+              </View>
+            ) : (
+              <View style={styles.mapPlaceholder}>
+                <Ionicons name="map-outline" size={48} color="#8B6F47" />
+                <Text style={styles.mapPlaceholderText}>Carregando mapa...</Text>
+              </View>
+            )}
+          </View>
+        </View>
       </ScrollView>
       )}
 
@@ -597,6 +754,32 @@ const styles = StyleSheet.create({
   },
   activeTabText: {
     color: '#FFFFFF',
+  },
+  mapContainer: {
+    height: 400,
+    borderRadius: 12,
+    overflow: 'hidden',
+    backgroundColor: '#F9F6F2',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  map: {
+    flex: 1,
+  },
+  mapPlaceholder: {
+    height: 400,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#F9F6F2',
+  },
+  mapPlaceholderText: {
+    marginTop: 12,
+    fontSize: 16,
+    color: '#8B6F47',
+    fontFamily: 'Montserrat-Regular',
   },
 });
 
