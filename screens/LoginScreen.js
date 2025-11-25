@@ -10,9 +10,12 @@ import {
   Platform,
   Image,
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import InputField from '../components/InputField';
 import ButtonPrimary from '../components/ButtonPrimary';
-import { validateCredentials } from '../services/authStorage';
+import { getUsuarioByEmail } from '../database/iniciarDatabase';
+
+const CURRENT_USER_KEY = '@current_user';
 
 const LoginScreen = ({ route, navigation }) => {
   const { onLogin } = route.params || {};
@@ -53,26 +56,50 @@ const LoginScreen = ({ route, navigation }) => {
 
     setLoading(true);
     try {
-      const result = await validateCredentials(email, password);
+      // Buscar usuário no banco SQLite
+      const user = getUsuarioByEmail(email.toLowerCase().trim());
       
-      if (result.success) {
-        Alert.alert(
-          'Sucesso',
-          result.message,
-          [{ 
-            text: 'OK', 
-            style: 'default',
-            onPress: () => onLogin()
-          }]
-        );
-      } else {
+      if (!user) {
         Alert.alert(
           'Falha no login',
-          result.message,
+          'E-mail ou senha inválidos',
           [{ text: 'OK', style: 'default' }]
         );
+        setLoading(false);
+        return;
       }
+
+      if (user.password !== password) {
+        Alert.alert(
+          'Falha no login',
+          'E-mail ou senha inválidos',
+          [{ text: 'OK', style: 'default' }]
+        );
+        setLoading(false);
+        return;
+      }
+
+      // Salvar usuário logado no AsyncStorage
+      const currentUser = {
+        id: user._id,
+        name: user.nome,
+        email: user.email,
+        profileImage: user.profileImage
+      };
+      
+      await AsyncStorage.setItem(CURRENT_USER_KEY, JSON.stringify(currentUser));
+
+      Alert.alert(
+        'Sucesso',
+        'Login realizado com sucesso!',
+        [{ 
+          text: 'OK', 
+          style: 'default',
+          onPress: () => onLogin(currentUser)
+        }]
+      );
     } catch (error) {
+      console.error('Erro no login:', error);
       Alert.alert(
         'Erro',
         'Ocorreu um erro inesperado. Tente novamente.',

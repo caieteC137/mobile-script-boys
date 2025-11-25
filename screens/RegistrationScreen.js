@@ -11,9 +11,12 @@ import {
   Platform,
   Image,
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import InputField from '../components/InputField';
 import ButtonPrimary from '../components/ButtonPrimary';
-import { createUser, setCurrentUser } from '../services/userStorage';
+import { addUsuario, getUsuarioByEmail, getUsuarioById } from '../database/iniciarDatabase';
+
+const CURRENT_USER_KEY = '@current_user';
 
 const RegistrationScreen = ({ route, navigation }) => {
   const { onRegister } = route.params || {};
@@ -80,39 +83,68 @@ const RegistrationScreen = ({ route, navigation }) => {
 
     setLoading(true);
     try {
-      const result = await createUser({
-        name: name.trim(),
-        email: email.trim(),
-        password: password
-      });
+      const emailLower = email.toLowerCase().trim();
 
-      if (result.success) {
-        // Set current user
-        await setCurrentUser(result.user);
-
-        Alert.alert(
-          'Sucesso',
-          result.message,
-          [{ 
-            text: 'OK', 
-            style: 'default',
-            onPress: () => {
-              if (onRegister) {
-                onRegister(result.user);
-              } else {
-                navigation.goBack();
-              }
-            }
-          }]
-        );
-      } else {
+      // Check if user already exists
+      const existingUser = getUsuarioByEmail(emailLower);
+      if (existingUser) {
         Alert.alert(
           'Falha no cadastro',
-          result.message,
+          'Este e-mail já está cadastrado',
           [{ text: 'OK', style: 'default' }]
         );
+        setLoading(false);
+        return;
       }
+
+      // Create new user in database
+      const result = addUsuario({
+        nome: name.trim(),
+        email: emailLower,
+        password: password,
+        profileImage: null
+      });
+
+      if (!result.success) {
+        Alert.alert(
+          'Falha no cadastro',
+          'Erro ao cadastrar usuário. Tente novamente.',
+          [{ text: 'OK', style: 'default' }]
+        );
+        setLoading(false);
+        return;
+      }
+
+      // Get the created user
+      const newUser = getUsuarioById(result._id);
+
+      // Set current user in AsyncStorage
+      const currentUser = {
+        id: newUser._id,
+        name: newUser.nome,
+        email: newUser.email,
+        profileImage: newUser.profileImage
+      };
+
+      await AsyncStorage.setItem(CURRENT_USER_KEY, JSON.stringify(currentUser));
+
+      Alert.alert(
+        'Sucesso',
+        'Usuário cadastrado com sucesso!',
+        [{ 
+          text: 'OK', 
+          style: 'default',
+          onPress: () => {
+            if (onRegister) {
+              onRegister(currentUser);
+            } else {
+              navigation.goBack();
+            }
+          }
+        }]
+      );
     } catch (error) {
+      console.error('Erro no cadastro:', error);
       Alert.alert(
         'Erro',
         'Ocorreu um erro inesperado. Tente novamente.',
@@ -300,4 +332,3 @@ const styles = StyleSheet.create({
 });
 
 export default RegistrationScreen;
-
