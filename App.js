@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { StyleSheet, View, ActivityIndicator } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import LoginScreen from './screens/LoginScreen';
@@ -11,11 +12,12 @@ import MuseumDetailsScreen from './screens/MuseumDetailsScreen';
 import MuseumsCategoryScreen from './screens/MuseumsCategoryScreen';
 import AddMuseumScreen from './screens/AddMuseumScreen';
 import AboutScreen from './screens/AboutScreen';
-import { getCurrentUser } from './services/userStorage';
+import EditProfileScreen from './screens/EditProfileScreen';
+import ProfileScreen from './screens/ProfileScreen';
 import { popularBancoDados } from './test_add';
 import { debugDatabase } from './database/iniciarDatabase';
 
-
+const CURRENT_USER_KEY = '@current_user';
 const Stack = createNativeStackNavigator();
 
 export default function App() {
@@ -31,9 +33,12 @@ export default function App() {
 
   const checkAuthStatus = async () => {
     try {
-      const currentUser = await getCurrentUser();
-      if (currentUser) {
-        setIsLoggedIn(true);
+      const userJson = await AsyncStorage.getItem(CURRENT_USER_KEY);
+      if (userJson) {
+        const currentUser = JSON.parse(userJson);
+        if (currentUser) {
+          setIsLoggedIn(true);
+        }
       }
     } catch (error) {
       console.error('Error checking auth status:', error);
@@ -48,9 +53,6 @@ export default function App() {
 
   const handleLogout = () => {
     setIsLoggedIn(false);
-    // Não precisa fazer reset manualmente
-    // O React Navigation vai automaticamente renderizar as rotas de login
-    // quando isLoggedIn mudar para false
   };
 
   if (isLoading) {
@@ -101,6 +103,17 @@ export default function App() {
             <Stack.Screen 
               name="AddMuseum" 
               component={AddMuseumScreen}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen 
+              name="Profile" 
+              component={ProfileScreen}
+              initialParams={{ onLogout: handleLogout }}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen 
+              name="EditProfile" 
+              component={EditProfileScreen}
               options={{ headerShown: false }}
             />
             <Stack.Screen 

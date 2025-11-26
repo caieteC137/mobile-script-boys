@@ -10,14 +10,14 @@ import {
   ActivityIndicator,
   Alert,
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
+import { useFocusEffect } from '@react-navigation/native';
 import { fonts } from '../utils/fonts';
-import { 
-  getCurrentUser, 
-  clearCurrentUser, 
-  updateUserProfileImage 
-} from '../services/userStorage';
+import { getUsuarioById, updateUsuario } from '../database/iniciarDatabase';
+
+const CURRENT_USER_KEY = '@current_user';
 
 const ProfileScreen = ({ onLogout, navigation, onNavigateToFavorites }) => {
   const [user, setUser] = useState(null);
@@ -40,12 +40,44 @@ const ProfileScreen = ({ onLogout, navigation, onNavigateToFavorites }) => {
     loadUserData();
   }, []);
 
+  // Recarregar dados quando a tela ganhar foco
+  useFocusEffect(
+    React.useCallback(() => {
+      loadUserData();
+    }, [])
+  );
+
   const loadUserData = async () => {
     try {
-      const currentUser = await getCurrentUser();
-      setUser(currentUser);
-      // Inicializa a imagem de perfil a partir do usuário armazenado (se houver)
-      setProfileImage(currentUser?.profileImage || null);
+      // Buscar usuário atual do AsyncStorage
+      const userJson = await AsyncStorage.getItem(CURRENT_USER_KEY);
+      if (!userJson) {
+        setLoading(false);
+        return;
+      }
+
+      const currentUser = JSON.parse(userJson);
+      
+      // Buscar dados atualizados do banco SQLite
+      const dbUser = getUsuarioById(currentUser.id);
+      
+      if (dbUser) {
+        const userData = {
+          id: dbUser._id,
+          name: dbUser.nome,
+          email: dbUser.email,
+          profileImage: dbUser.profileImage
+        };
+        
+        setUser(userData);
+        setProfileImage(dbUser.profileImage);
+        
+        // Atualizar AsyncStorage com dados mais recentes
+        await AsyncStorage.setItem(CURRENT_USER_KEY, JSON.stringify(userData));
+      } else {
+        setUser(currentUser);
+        setProfileImage(currentUser.profileImage);
+      }
     } catch (error) {
       console.error('Error loading user data:', error);
     } finally {
@@ -66,7 +98,7 @@ const ProfileScreen = ({ onLogout, navigation, onNavigateToFavorites }) => {
           text: 'Sair',
           style: 'destructive',
           onPress: async () => {
-            await clearCurrentUser();
+            await AsyncStorage.removeItem(CURRENT_USER_KEY);
             if (onLogout) {
               onLogout();
             }
@@ -76,8 +108,33 @@ const ProfileScreen = ({ onLogout, navigation, onNavigateToFavorites }) => {
     );
   };
 
+  const updateProfileImage = async (imageUri) => {
+    try {
+      // Atualizar no banco SQLite
+      const result = updateUsuario(user.id, { profileImage: imageUri });
+      
+      if (!result.success) {
+        Alert.alert('Erro', 'Não foi possível atualizar a foto de perfil');
+        return;
+      }
+
+      // Atualizar estado local
+      setProfileImage(imageUri);
+
+      // Atualizar AsyncStorage
+      const updatedUser = { ...user, profileImage: imageUri };
+      setUser(updatedUser);
+      await AsyncStorage.setItem(CURRENT_USER_KEY, JSON.stringify(updatedUser));
+
+      Alert.alert('Sucesso', 'Foto de perfil atualizada!');
+    } catch (error) {
+      console.error('Error updating profile image:', error);
+      Alert.alert('Erro', 'Ocorreu um erro ao atualizar a foto');
+    }
+  };
+
   const takePicture = async () => {
-    let result = await ImagePicker.launchCameraAsync({
+    const result = await ImagePicker.launchCameraAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
       aspect: [1, 1],
@@ -86,12 +143,9 @@ const ProfileScreen = ({ onLogout, navigation, onNavigateToFavorites }) => {
 
     if (!result.canceled) {
       const uri = result.assets[0].uri;
-      setProfileImage(uri);
-      await updateUserProfileImage(user.id, uri);
-      Alert.alert("Foto atualizada com sucesso");
+      await updateProfileImage(uri);
     }
   };
-
 
   const pickImage = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -103,9 +157,29 @@ const ProfileScreen = ({ onLogout, navigation, onNavigateToFavorites }) => {
 
     if (!result.canceled) {
       const uri = result.assets[0].uri;
-      setProfileImage(uri);
-      await updateUserProfileImage(user.id, uri);
+      await updateProfileImage(uri);
     }
+  };
+
+  const showImageOptions = () => {
+    Alert.alert(
+      'Foto de Perfil',
+      'Escolha uma opção',
+      [
+        {
+          text: 'Tirar Foto',
+          onPress: takePicture,
+        },
+        {
+          text: 'Escolher da Galeria',
+          onPress: pickImage,
+        },
+        {
+          text: 'Cancelar',
+          style: 'cancel',
+        },
+      ]
+    );
   };
 
   if (loading) {
@@ -131,7 +205,10 @@ const ProfileScreen = ({ onLogout, navigation, onNavigateToFavorites }) => {
           )}
 
           {/* Botão para trocar imagem */}
-          <TouchableOpacity style={styles.editPhotoButton} onPress={pickImage}>
+          <TouchableOpacity 
+            style={styles.editPhotoButton} 
+            onPress={showImageOptions}
+          >
             <Ionicons name="camera" size={20} color="#FFFFFF" />
           </TouchableOpacity>
         </View>
@@ -141,7 +218,10 @@ const ProfileScreen = ({ onLogout, navigation, onNavigateToFavorites }) => {
 
       {/* Menu Items */}
       <View style={styles.menuSection}>
-        <TouchableOpacity style={styles.menuItem}>
+        <TouchableOpacity 
+          style={styles.menuItem}
+          onPress={() => navigation?.navigate('EditProfile')}
+        >
           <View style={styles.menuItemLeft}>
             <Ionicons name="person-outline" size={24} color="#8B6F47" />
             <Text style={styles.menuItemText}>Editar Perfil</Text>
@@ -335,4 +415,3 @@ const styles = StyleSheet.create({
 });
 
 export default ProfileScreen;
-
